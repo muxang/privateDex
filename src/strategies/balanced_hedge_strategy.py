@@ -109,7 +109,7 @@ class BalancedHedgeStrategy:
             
             # 环境清理完成
             if cleanup_orders_success and cleanup_positions_success:
-                logger.info("✨ 环境清理完成，准备开仓", pair_id=pair_config.id)
+                logger.debug("✨ 环境清理完成，准备开仓", pair_id=pair_config.id)
             else:
                 logger.warning("⚠️ 环境清理部分失败，但继续开仓流程", pair_id=pair_config.id)
             
@@ -158,7 +158,7 @@ class BalancedHedgeStrategy:
                              available_margin=float(max_safe_margin_per_account))
             
             # 详细的账户余额日志
-            logger.info("账户余额分析",
+            logger.debug("账户余额分析",
                        accounts_count=len(accounts),
                        account_balances={k: float(v) for k, v in account_balances.items()},
                        min_balance=float(min_balance),
@@ -416,7 +416,7 @@ class BalancedHedgeStrategy:
                 min_entry = min(entry_prices)
                 price_diff = (max_entry - min_entry) / min_entry if min_entry > 0 else Decimal('0')
                 
-                logger.info("市价单成交价格分析",
+                logger.debug("市价单成交价格分析",
                            position_id=position_id,
                            max_entry_price=float(max_entry),
                            min_entry_price=float(min_entry),
@@ -457,7 +457,7 @@ class BalancedHedgeStrategy:
             hedge_position.positions = positions
             
             # 等待一段时间让订单充分处理，避免过早检查
-            logger.info("等待订单完全处理后再进行后端验证", position_id=position_id)
+            logger.debug("等待订单完全处理后再进行后端验证", position_id=position_id)
             await asyncio.sleep(5)  # 等待5秒让后端系统处理完成
             
             # 后端验证改为可选 (解决订单查询问题)
@@ -499,7 +499,7 @@ class BalancedHedgeStrategy:
                 logger.info("开始创建协调的对冲止损止盈订单", position_id=position_id)
                 try:
                     # 刷新仓位数据以确保获得最新状态
-                    logger.info("刷新仓位数据以准备止损止盈", position_id=position_id)
+                    logger.debug("刷新仓位数据以准备止损止盈", position_id=position_id)
                     refreshed_positions = []
                     for account_index in accounts:
                         try:
@@ -522,7 +522,7 @@ class BalancedHedgeStrategy:
                     
                     # 如果刷新成功，使用刷新的数据，否则使用原始数据
                     positions_to_use = refreshed_positions if refreshed_positions else positions
-                    logger.info("仓位数据选择",
+                    logger.debug("仓位数据选择",
                                position_id=position_id,
                                refreshed_count=len(refreshed_positions),
                                original_count=len(positions),
@@ -545,7 +545,7 @@ class BalancedHedgeStrategy:
                                          side=position.side,
                                          size=float(position.size))
                     
-                    logger.info("准备止损止盈仓位数据",
+                    logger.debug("准备止损止盈仓位数据",
                                position_id=position_id,
                                positions_count=len(positions_to_use),
                                valid_positions_count=len(positions_for_sl_tp),
@@ -723,7 +723,7 @@ class BalancedHedgeStrategy:
                         # 市价单即使差异大也继续执行
                         break
                 
-                logger.info("市价单价格差异分析",
+                logger.debug("市价单价格差异分析",
                           prices=[float(p) for p in prices],
                           avg_price=float(avg_price),
                           expected_price=float(expected_price))
@@ -3314,7 +3314,7 @@ class BalancedHedgeStrategy:
                     return []
                 
                 account_data = account_response.accounts[0]
-                logger.info("📊 解析账户数据",
+                logger.debug("📊 解析账户数据",
                            account_index=account_index,
                            account_type=type(account_data).__name__,
                            has_positions=hasattr(account_data, 'positions'),
@@ -3323,7 +3323,7 @@ class BalancedHedgeStrategy:
                 # 解析仓位数据
                 positions = []
                 if hasattr(account_data, 'positions') and account_data.positions:
-                    logger.info("📋 发现仓位数据",
+                    logger.debug("📋 发现仓位数据",
                                account_index=account_index,
                                positions_count=len(account_data.positions) if hasattr(account_data.positions, '__len__') else 'unknown',
                                positions_type=type(account_data.positions).__name__)
@@ -3434,7 +3434,7 @@ class BalancedHedgeStrategy:
                                      account_index=account_index,
                                      positions_type=type(position_list).__name__)
                 else:
-                    logger.info("ℹ️ 账户无仓位数据", account_index=account_index)
+                    logger.debug("ℹ️ 账户无仓位数据", account_index=account_index)
                 
                 logger.info("📊 仓位查询完成",
                            account_index=account_index,

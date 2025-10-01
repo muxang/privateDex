@@ -195,7 +195,7 @@ class HedgeTradingEngine:
     
     async def _check_trading_opportunities(self) -> None:
         """Check for trading opportunities"""
-        logger.info("🔍 开始检查交易机会",
+        logger.debug("🔍 开始检查交易机会",
                    trading_pairs_count=len(self.trading_pairs),
                    is_engine_running=self.is_running)
         
@@ -214,7 +214,7 @@ class HedgeTradingEngine:
                 # Check if we can open a new position
                 can_open = await self._can_open_new_position(pair_config)
                 
-                logger.info("🎯 开仓条件检查结果",
+                logger.debug("🎯 开仓条件检查结果",
                            pair_id=pair_id,
                            can_trade=can_open,
                            result="✅ 可以开仓" if can_open else "❌ 不能开仓")
@@ -235,18 +235,18 @@ class HedgeTradingEngine:
                            pair_id=pair_id,
                            error=str(e))
         
-        logger.info("🔍 交易机会检查完成")
+        logger.debug("🔍 交易机会检查完成")
     
     async def _can_open_new_position(self, pair_config: TradingPairConfig) -> bool:
         """Check if we can open a new position for the pair"""
         try:
-            logger.info("🔍 开始详细条件检查", pair_id=pair_config.id)
+            logger.debug("🔍 开始详细条件检查", pair_id=pair_config.id)
             
             # 1. Check if there are any opening positions
             opening_positions = [p for p in self.active_positions.values()
                                if p.pair_id == pair_config.id and p.status == PositionStatus.OPENING]
             
-            logger.info("📋 条件1 - 检查正在开仓的仓位",
+            logger.debug("📋 条件1 - 检查正在开仓的仓位",
                        pair_id=pair_config.id,
                        opening_positions_count=len(opening_positions),
                        active_positions_total=len(self.active_positions),
@@ -261,7 +261,7 @@ class HedgeTradingEngine:
             # 2. Check pending orders
             has_pending = await self._check_pending_orders(pair_config)
             
-            logger.info("📋 条件2 - 检查待处理订单",
+            logger.debug("📋 条件2 - 检查待处理订单",
                        pair_id=pair_config.id,
                        has_pending=has_pending,
                        result="✅ 通过" if not has_pending else "❌ 失败")
@@ -274,7 +274,7 @@ class HedgeTradingEngine:
             # 3. Check account availability
             available_accounts = await self._check_account_availability(pair_config)
             
-            logger.info("📋 条件3 - 检查账户可用性",
+            logger.debug("📋 条件3 - 检查账户可用性",
                        pair_id=pair_config.id,
                        available_accounts_count=len(available_accounts),
                        required_accounts=2,
@@ -289,7 +289,7 @@ class HedgeTradingEngine:
             # 4. Check position overlap prevention
             has_active_positions = await self._check_position_overlap(pair_config)
             
-            logger.info("📋 条件4 - 检查仓位重叠防护",
+            logger.debug("📋 条件4 - 检查仓位重叠防护",
                        pair_id=pair_config.id,
                        has_active_positions=has_active_positions,
                        result="✅ 通过" if not has_active_positions else "❌ 失败")
@@ -306,7 +306,7 @@ class HedgeTradingEngine:
                 pair_config, estimated_margin
             )
             
-            logger.info("📋 条件5 - 检查风控限制",
+            logger.debug("📋 条件5 - 检查风控限制",
                        pair_id=pair_config.id,
                        risk_allowed=risk_check.allowed,
                        risk_reason=risk_check.reason,
@@ -321,7 +321,7 @@ class HedgeTradingEngine:
             # 6. Check cooldown period
             is_in_cooldown = self._is_in_cooldown(pair_config.id, pair_config.cooldown_minutes)
             
-            logger.info("📋 条件6 - 检查冷却时间",
+            logger.debug("📋 条件6 - 检查冷却时间",
                        pair_id=pair_config.id,
                        in_cooldown=is_in_cooldown,
                        cooldown_minutes=pair_config.cooldown_minutes,
@@ -333,7 +333,7 @@ class HedgeTradingEngine:
                            cooldown_minutes=pair_config.cooldown_minutes)
                 return False
             
-            logger.info("🎉 所有开仓条件检查通过！", pair_id=pair_config.id)
+            logger.debug("🎉 所有开仓条件检查通过！", pair_id=pair_config.id)
             return True
             
         except Exception as e:
@@ -370,7 +370,7 @@ class HedgeTradingEngine:
             total_pending_count = 0
             expired_orders_count = 0
             
-            logger.info("开始检查账户待处理订单",
+            logger.debug("开始检查账户待处理订单",
                        pair_id=pair_config.id,
                        accounts_count=len(pair_accounts),
                        order_timeout=order_timeout)
@@ -411,7 +411,7 @@ class HedgeTradingEngine:
             
             # 记录统计信息
             if total_pending_count > 0 or expired_orders_count > 0:
-                logger.info("待处理订单检查统计",
+                logger.debug("待处理订单检查统计",
                            pair_id=pair_config.id,
                            total_pending=total_pending_count,
                            blocking_orders=blocking_orders_count,
@@ -482,7 +482,7 @@ class HedgeTradingEngine:
     async def _evaluate_market_conditions(self, pair_config: TradingPairConfig) -> Optional[TradingOpportunity]:
         """Evaluate market conditions for trading opportunity"""
         try:
-            logger.info("📊 开始检查市场条件", pair_id=pair_config.id)
+            logger.debug("📊 开始检查市场条件", pair_id=pair_config.id)
             
             # Get market data
             market_data = await self.order_manager.get_market_data(pair_config.market_index)
@@ -871,7 +871,7 @@ class HedgeTradingEngine:
             # 使用OrderApi查询账户的未完成订单
             # 根据官方SDK文档，使用account_inactive_orders方法
             orders_response = await self.order_manager.order_api.account_inactive_orders(
-                account_index=str(account_index)
+                str(account_index), limit=1000  # Use positional argument and add required limit
             )
             
             if not orders_response or not hasattr(orders_response, 'orders'):

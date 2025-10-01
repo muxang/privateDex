@@ -965,15 +965,11 @@ class OrderManager:
                 return 0
             
             # Get all inactive orders from exchange
-            if market_index is not None:
-                inactive_orders_data = await self.order_api.account_inactive_orders(
-                    account_index=account_index,
-                    market_index=market_index
-                )
-            else:
-                inactive_orders_data = await self.order_api.account_inactive_orders(
-                    account_index=account_index
-                )
+            # Note: account_inactive_orders doesn't accept market_index parameter
+            # We'll filter by market after getting all orders
+            inactive_orders_data = await self.order_api.account_inactive_orders(
+                account_index, limit=1000  # Use positional argument and add required limit
+            )
             
             if not inactive_orders_data or not hasattr(inactive_orders_data, 'orders'):
                 logger.info("未找到需要取消的订单",
@@ -1065,7 +1061,7 @@ class OrderManager:
         expired_orders = []
         all_orders_for_account = []
         
-        logger.info("开始检查账户订单超时",
+        logger.debug("开始检查账户订单超时",
                    account_index=account_index,
                    timeout_seconds=timeout_seconds,
                    current_time=current_time.isoformat(),
@@ -1106,7 +1102,7 @@ class OrderManager:
                                    age_seconds=int(age_seconds),
                                    remaining_seconds=int(timeout_seconds - age_seconds))
         
-        logger.info("账户订单超时检查完成",
+        logger.debug("账户订单超时检查完成",
                    account_index=account_index,
                    total_orders_for_account=len(all_orders_for_account),
                    expired_count=len(expired_orders),
@@ -1155,12 +1151,12 @@ class OrderManager:
             # 策略2: WebSocket数据不可用或太旧时，尝试API（带频率限制）
             api_key = f"market_data_{market_index}"
             if self._can_make_api_call(api_key, force_first_call=not bool(ws_data)):
-                logger.info("尝试API获取市场数据", 
+                logger.debug("尝试API获取市场数据", 
                            market_index=market_index,
                            ws_data_available=bool(ws_data))
                 api_data = await self._fetch_market_data_from_api(market_index)
                 if api_data:
-                    logger.info("✅ API数据获取成功", 
+                    logger.debug("✅ API数据获取成功", 
                                market_index=market_index,
                                price=float(api_data.price))
                     return api_data
@@ -1275,7 +1271,7 @@ class OrderManager:
             # 如果没有WebSocket订单簿，允许首次API调用
             force_first = not bool(ws_orderbook)
             if self._can_make_api_call(api_key, force_first_call=force_first):
-                logger.info("WebSocket订单簿不可用，使用API获取", 
+                logger.debug("WebSocket订单簿不可用，使用API获取", 
                            market_index=market_index,
                            reason="首次调用" if force_first else "正常频率")
                 return await self._fetch_orderbook_from_api(market_index)
@@ -1476,7 +1472,7 @@ class OrderManager:
                         
                         if all_orders:
                             orders = all_orders
-                            logger.info("使用account_active_orders方法成功", 
+                            logger.debug("使用account_active_orders方法成功", 
                                        account_index=account_index,
                                        total_orders=len(orders))
                         
@@ -1496,13 +1492,13 @@ class OrderManager:
                                 method = getattr(self.order_api, method_name)
                                 if callable(method):
                                     orders = await method()
-                                    logger.info(f"使用{method_name}方法成功", account_index=account_index)
+                                    logger.debug(f"使用{method_name}方法成功", account_index=account_index)
                                     break
                             except Exception as e:
                                 logger.debug(f"{method_name}方法失败", error=str(e))
                 
                 if orders:
-                    logger.info("成功获取活跃订单", 
+                    logger.debug("成功获取活跃订单", 
                                account_index=account_index, 
                                orders_count=len(orders) if isinstance(orders, list) else 1)
                     return orders if isinstance(orders, list) else [orders]
@@ -1544,8 +1540,7 @@ class OrderManager:
                         for market_id in market_ids:
                             try:
                                 market_orders = await self.order_api.account_inactive_orders(
-                                    account_index=account_index,
-                                    limit=100  # 限制返回100条历史订单
+                                    account_index, limit=100  # Use positional argument for account_index
                                 )
                                 if market_orders:
                                     all_orders.extend(market_orders if isinstance(market_orders, list) else [market_orders])
@@ -1560,7 +1555,7 @@ class OrderManager:
                         
                         if all_orders:
                             orders = all_orders
-                            logger.info("使用account_inactive_orders方法成功", 
+                            logger.debug("使用account_inactive_orders方法成功", 
                                        account_index=account_index,
                                        total_orders=len(orders))
                         
@@ -1568,7 +1563,7 @@ class OrderManager:
                         logger.debug("account_inactive_orders方法失败", error=str(e))
                 
                 if orders:
-                    logger.info("成功获取账户历史订单", 
+                    logger.debug("成功获取账户历史订单", 
                                account_index=account_index, 
                                orders_count=len(orders))
                     return orders
@@ -1601,7 +1596,7 @@ class OrderManager:
                 "total_orders": len(active_orders) + len(inactive_orders)
             }
             
-            logger.info("成功获取账户所有订单", 
+            logger.debug("成功获取账户所有订单", 
                        account_index=account_index,
                        active_count=len(active_orders),
                        inactive_count=len(inactive_orders),
@@ -1669,7 +1664,7 @@ class OrderManager:
                     initial_positions[order.account_index] = []
             
             # 等待订单处理
-            logger.info("等待订单处理完成...")
+            logger.debug("等待订单处理完成...")
             await asyncio.sleep(8)  # 给订单时间处理
             
             # 检查持仓变化

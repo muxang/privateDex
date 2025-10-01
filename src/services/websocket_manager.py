@@ -126,7 +126,7 @@ class WebSocketManager:
         attempt = 0
         while attempt < self.max_reconnect_attempts:
             try:
-                logger.info("启动WebSocket客户端", attempt=attempt + 1)
+                logger.debug("启动WebSocket客户端", attempt=attempt + 1)
                 self.is_connected = True
                 
                 # Run the client (this will block until connection fails)
@@ -141,7 +141,7 @@ class WebSocketManager:
                            max_attempts=self.max_reconnect_attempts)
                 
                 if attempt < self.max_reconnect_attempts:
-                    logger.info("等待重连...", 
+                    logger.debug("等待重连...", 
                                delay=self.reconnect_interval,
                                attempt=attempt + 1)
                     await asyncio.sleep(self.reconnect_interval)
@@ -297,7 +297,7 @@ class WebSocketManager:
             if self.ws_client:
                 await self._update_subscriptions()
             
-            logger.info("订阅账户数据",
+            logger.debug("订阅账户数据",
                        account_index=account_index,
                        total_accounts=len(self.subscribed_accounts))
                        
@@ -430,7 +430,7 @@ class WebSocketManager:
         elif message_type == "error":
             logger.error("WebSocket错误消息", error=data.get("message"))
         elif message_type == "subscribed":
-            logger.info("订阅成功", market=data.get("market_index"))
+            logger.debug("订阅成功", market=data.get("market_index"))
         else:
             logger.debug("未知消息类型", type=message_type, data=data)
     
@@ -574,7 +574,7 @@ class WebSocketManager:
                 # Recreate client with updated subscriptions
                 await self._update_subscriptions()
             
-            logger.info("订阅市场数据",
+            logger.debug("订阅市场数据",
                        market_index=market_index,
                        total_markets=len(self.subscribed_markets))
                        
@@ -609,7 +609,7 @@ class WebSocketManager:
             self.latest_market_data.pop(market_index, None)
             self.latest_orderbooks.pop(market_index, None)
             
-            logger.info("取消订阅市场数据", market_index=market_index)
+            logger.debug("取消订阅市场数据", market_index=market_index)
             
         except Exception as e:
             logger.error("取消订阅失败",
@@ -699,7 +699,7 @@ class WebSocketManager:
         try:
             if market_index not in self.subscribed_markets:
                 self.subscribed_markets.add(market_index)
-                logger.info("订阅市场数据", market_index=market_index)
+                logger.debug("订阅市场数据", market_index=market_index)
                 
                 # 如果WebSocket已连接，需要重新创建客户端以包含新的订阅
                 if self.is_connected:
@@ -719,7 +719,7 @@ class WebSocketManager:
         try:
             if account_index not in self.subscribed_accounts:
                 self.subscribed_accounts.add(account_index)
-                logger.info("订阅账户数据", account_index=account_index)
+                logger.debug("订阅账户数据", account_index=account_index)
                 
                 # 如果WebSocket已连接，需要重新创建客户端以包含新的订阅
                 if self.is_connected:
