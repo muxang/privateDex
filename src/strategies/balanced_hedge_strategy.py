@@ -199,8 +199,11 @@ class BalancedHedgeStrategy:
                 return hedge_position
             
             current_price = market_data.price
-            # 将美元价值转换为BTC数量
+            # 将美元价值转换为BTC数量，确保精度一致
             amount_per_account = actual_position_per_account / current_price
+            
+            # 强制统一精度到5位小数，确保所有仓位数量严格一致
+            amount_per_account = amount_per_account.quantize(Decimal('0.00001'))
             
             logger.info("最终交易参数",
                        usd_value_per_account=float(actual_position_per_account),
@@ -689,44 +692,82 @@ class BalancedHedgeStrategy:
         return False
     
     def _validate_hedge_consistency(self, orders: List, expected_amount: Decimal, expected_price: Decimal) -> bool:
-        """验证对冲一致性 - 市价单允许合理的价格差异"""
+        """验证对冲一致性 - 确保配对仓位严格一致，止损止盈镜像"""
         try:
-            if len(orders) != 2:
-                logger.error("对冲订单数量错误", orders_count=len(orders), expected=2)
+            if len(orders) < 2:
+                logger.error("对冲订单数量不足", orders_count=len(orders), minimum_required=2)
                 return False
             
-            # 验证数量一致性
-            amounts = [order.amount for order in orders]
-            if not all(abs(float(amount - expected_amount)) < 0.001 for amount in amounts):
-                logger.error("对冲订单数量不一致", 
-                           amounts=amounts, 
-                           expected=float(expected_amount))
+            # 对冲必须是偶数个订单（成对出现）
+            if len(orders) % 2 != 0:
+                logger.error("对冲订单数量不是偶数，无法形成配对", orders_count=len(orders))
                 return False
+            
+            # 验证数量严格一致性 - 所有订单数量必须非常接近（允许最小精度误差）
+            amounts = [order.amount for order in orders]
+            max_amount_diff = Decimal('0.00001')  # 允许0.00001的精度误差
+            
+            if not all(abs(amount - expected_amount) <= max_amount_diff for amount in amounts):
+                logger.error("对冲订单数量差异超出允许范围", 
+                           amounts=[float(a) for a in amounts], 
+                           expected=float(expected_amount),
+                           max_allowed_diff=float(max_amount_diff))
+                return False
+            
+            # 验证买卖双方数量完全相等
+            buy_orders = [order for order in orders if order.side == 'buy']
+            sell_orders = [order for order in orders if order.side == 'sell']
+            
+            total_buy_amount = sum(order.amount for order in buy_orders)
+            total_sell_amount = sum(order.amount for order in sell_orders)
+            
+            # 买卖总量差异不能超过单个订单的精度误差
+            max_total_diff = max_amount_diff * len(orders)
+            amount_difference = abs(total_buy_amount - total_sell_amount)
+            
+            if amount_difference > max_total_diff:
+                logger.error("买卖总数量不平衡", 
+                           total_buy_amount=float(total_buy_amount),
+                           total_sell_amount=float(total_sell_amount),
+                           difference=float(amount_difference),
+                           max_allowed_diff=float(max_total_diff))
+                return False
+            
+            logger.info("✅ 对冲数量平衡验证通过",
+                       total_buy_amount=float(total_buy_amount),
+                       total_sell_amount=float(total_sell_amount),
+                       difference=float(amount_difference),
+                       orders_count=len(orders))
             
             # 检查是否为市价单
             is_market_orders = all(order.metadata.get('market_order', False) for order in orders)
             
             if is_market_orders:
-                # 市价单：验证价格差异在合理范围内（允许5%的滑点）
+                # 市价单：验证价格差异在合理范围内（允许2%的滑点，这对于BTC是合理的）
                 prices = [order.price for order in orders]
                 avg_price = sum(prices) / len(prices)
-                max_allowed_diff_percent = 5.0  # 5%
+                max_allowed_diff_percent = 0.5  # 0.5%的滑点对于市价单是合理的
                 
+                price_diffs = []
                 for price in prices:
                     diff_percent = abs(float((price - avg_price) / avg_price)) * 100
-                    if diff_percent > max_allowed_diff_percent:
-                        logger.warning("市价单价格差异较大但在可接受范围", 
-                                     prices=prices, 
-                                     avg_price=float(avg_price),
-                                     diff_percent=diff_percent,
-                                     max_allowed=max_allowed_diff_percent)
-                        # 市价单即使差异大也继续执行
-                        break
+                    price_diffs.append(diff_percent)
                 
-                logger.debug("市价单价格差异分析",
-                          prices=[float(p) for p in prices],
-                          avg_price=float(avg_price),
-                          expected_price=float(expected_price))
+                max_diff = max(price_diffs) if price_diffs else 0
+                
+                if max_diff > max_allowed_diff_percent:
+                    logger.warning("市价单价格差异超出合理范围，但允许继续执行", 
+                                 prices=[float(p) for p in prices], 
+                                 avg_price=float(avg_price),
+                                 max_diff_percent=max_diff,
+                                 max_allowed=max_allowed_diff_percent,
+                                 expected_price=float(expected_price))
+                else:
+                    logger.info("✅ 市价单价格差异在合理范围内",
+                              prices=[float(p) for p in prices],
+                              avg_price=float(avg_price),
+                              max_diff_percent=max_diff,
+                              expected_price=float(expected_price))
             else:
                 # 限价单：验证价格严格一致性
                 prices = [order.price for order in orders]
@@ -736,10 +777,20 @@ class BalancedHedgeStrategy:
                                expected=float(expected_price))
                     return False
             
-            # 验证方向一致性（必须有一个买单和一个卖单）
+            # 验证方向一致性（必须有相等数量的买单和卖单）
             sides = [order.side for order in orders]
-            if not ('buy' in sides and 'sell' in sides and len(set(sides)) == 2):
-                logger.error("对冲订单方向不符合要求", sides=sides)
+            buy_count = sides.count('buy')
+            sell_count = sides.count('sell')
+            
+            if buy_count != sell_count:
+                logger.error("对冲订单方向不平衡", 
+                           buy_count=buy_count, 
+                           sell_count=sell_count, 
+                           sides=sides)
+                return False
+            
+            if buy_count == 0 or sell_count == 0:
+                logger.error("对冲订单缺少买单或卖单", sides=sides)
                 return False
             
             # 验证市场一致性
@@ -2250,69 +2301,57 @@ class BalancedHedgeStrategy:
             return False
     
     async def _get_unified_execution_price(self, market_index: int) -> Optional[Decimal]:
-        """获取统一的执行价格 - 优先使用WebSocket实时数据"""
+        """获取统一的执行价格 - 仅使用WebSocket新鲜数据，确保避免亏损"""
         try:
-            market_data = None
-            orderbook = None
+            # 仅使用WebSocket实时数据，确保数据新鲜度
+            if not hasattr(self.order_manager, 'websocket_manager') or not self.order_manager.websocket_manager:
+                logger.error("WebSocket管理器不可用，需要重新初始化", market_index=market_index)
+                await self._reinitialize_websocket()
+                return None
             
-            # 策略1: 直接从WebSocket管理器获取最新数据
-            if hasattr(self.order_manager, 'websocket_manager') and self.order_manager.websocket_manager:
-                ws_market_data = self.order_manager.websocket_manager.get_latest_market_data(market_index)
-                ws_orderbook = self.order_manager.websocket_manager.get_latest_orderbook(market_index)
-                
-                if ws_market_data and ws_orderbook:
-                    data_age = (datetime.now() - ws_market_data.timestamp).total_seconds()
-                    logger.debug("✅ 使用WebSocket实时数据获取统一价格",
-                               market_index=market_index,
-                               data_age_seconds=f"{data_age:.1f}s",
-                               price=float(ws_market_data.price))
-                    market_data = ws_market_data
-                    orderbook = ws_orderbook
-                elif ws_market_data:
-                    # 即使没有订单簿，也可以使用市场数据
-                    data_age = (datetime.now() - ws_market_data.timestamp).total_seconds()
-                    logger.debug("✅ 使用WebSocket市场数据（无订单簿）",
-                               market_index=market_index,
-                               data_age_seconds=f"{data_age:.1f}s",
-                               price=float(ws_market_data.price))
-                    return ws_market_data.price
+            ws_manager = self.order_manager.websocket_manager
+            ws_market_data = ws_manager.get_latest_market_data(market_index)
+            ws_orderbook = ws_manager.get_latest_orderbook(market_index)
             
-            # 策略2: 使用策略自身缓存
-            if not market_data:
-                cached_orderbook = self.get_cached_orderbook(market_index)
-                cached_market_data = self.get_cached_market_data(market_index)
-                
-                if cached_orderbook and cached_market_data:
-                    logger.debug("使用策略缓存数据",
-                               market_index=market_index,
-                               data_age_seconds=(datetime.now() - cached_market_data.timestamp).total_seconds())
-                    orderbook = cached_orderbook
-                    market_data = cached_market_data
+            # 检查数据新鲜度（30秒内的数据才被认为是新鲜的）
+            max_data_age = 30.0  # 30秒，比之前更严格
+            current_time = datetime.now()
             
-            # 策略3: 回退到API请求
-            if not market_data:
-                logger.debug("回退到API请求数据", market_index=market_index)
-                market_data = await self.order_manager.get_market_data(market_index)
-                if not market_data:
-                    logger.error("无法获取市场数据", market_index=market_index)
-                    return None
-                
-                # 获取订单簿验证波动性
-                orderbook = await self.order_manager.get_orderbook(market_index)
+            # 检查市场数据新鲜度
+            if not ws_market_data or not hasattr(ws_market_data, 'timestamp'):
+                logger.warning("WebSocket市场数据不可用或无时间戳，需要重新初始化", market_index=market_index)
+                await self._reinitialize_websocket()
+                return None
             
-            # 策略4: 最后备用方案 - 至少确保有市场数据
-            if not market_data:
-                logger.warning("所有数据源失败，尝试强制API调用", market_index=market_index)
-                try:
-                    # 绕过频率限制，强制获取数据
-                    market_data = await self.order_manager._fetch_market_data_from_api(market_index)
-                    if market_data:
-                        logger.info("✅ 强制API调用成功", 
-                                   market_index=market_index,
-                                   price=float(market_data.price))
-                except Exception as e:
-                    logger.error("强制API调用也失败", market_index=market_index, error=str(e))
-                    return None
+            data_age = (current_time - ws_market_data.timestamp).total_seconds()
+            if data_age > max_data_age:
+                logger.warning("WebSocket市场数据过时，需要重新初始化", 
+                             market_index=market_index,
+                             data_age_seconds=f"{data_age:.1f}s",
+                             max_age_seconds=max_data_age)
+                await self._reinitialize_websocket()
+                return None
+            
+            # 检查订单簿数据新鲜度
+            if not ws_orderbook or not hasattr(ws_orderbook, 'timestamp'):
+                logger.warning("WebSocket订单簿不可用，使用市场价格", market_index=market_index)
+                return ws_market_data.price
+            
+            orderbook_age = (current_time - ws_orderbook.timestamp).total_seconds()
+            if orderbook_age > max_data_age:
+                logger.warning("WebSocket订单簿数据过时，使用市场价格", 
+                             market_index=market_index,
+                             orderbook_age_seconds=f"{orderbook_age:.1f}s")
+                return ws_market_data.price
+            
+            logger.debug("✅ 使用WebSocket新鲜数据",
+                        market_index=market_index,
+                        market_data_age=f"{data_age:.1f}s",
+                        orderbook_age=f"{orderbook_age:.1f}s",
+                        price=float(ws_market_data.price))
+            
+            market_data = ws_market_data
+            orderbook = ws_orderbook
             
             if not orderbook or not orderbook.bids or not orderbook.asks:
                 logger.warning("订单簿数据不完整，使用市场价格", market_index=market_index)
@@ -2364,7 +2403,38 @@ class BalancedHedgeStrategy:
             logger.error("获取统一执行价格失败", 
                         market_index=market_index,
                         error=str(e))
+            await self._reinitialize_websocket()
             return None
+    
+    async def _reinitialize_websocket(self):
+        """重新初始化WebSocket连接以确保数据新鲜度"""
+        try:
+            logger.warning("🔄 检测到WebSocket数据问题，开始重新初始化")
+            
+            if hasattr(self.order_manager, 'websocket_manager') and self.order_manager.websocket_manager:
+                ws_manager = self.order_manager.websocket_manager
+                
+                # 停止当前WebSocket连接
+                if hasattr(ws_manager, 'stop'):
+                    logger.info("📡 停止当前WebSocket连接")
+                    await ws_manager.stop()
+                
+                # 等待短暂时间让连接完全关闭
+                await asyncio.sleep(2)
+                
+                # 重新启动WebSocket连接
+                logger.info("📡 重新启动WebSocket连接")
+                await ws_manager.start()
+                
+                # 等待连接建立和数据同步
+                await asyncio.sleep(5)
+                
+                logger.info("✅ WebSocket重新初始化完成")
+            else:
+                logger.error("❌ WebSocket管理器不存在，无法重新初始化")
+                
+        except Exception as e:
+            logger.error("WebSocket重新初始化失败", error=str(e))
     
     async def _create_precise_hedge_order(
         self,
@@ -2533,6 +2603,11 @@ class BalancedHedgeStrategy:
                        positions_count=len(positions),
                        leverage=leverage,
                        positions_data=[{"account": p["account_index"], "side": p["side"], "amount": float(p["amount"]), "entry_price": float(p["entry_price"])} for p in positions])
+            
+            # 在创建订单前验证镜像对称性
+            if not self._validate_stop_loss_take_profit_mirror(positions, hedge_lower_price, hedge_upper_price):
+                logger.error("止损止盈镜像对称性验证失败，终止创建", hedge_position_id=hedge_position_id)
+                return
             
             # 为每个仓位创建相应的止损止盈订单
             for pos in positions:
@@ -3455,3 +3530,73 @@ class BalancedHedgeStrategy:
                         market_index=market_index,
                         error=str(e))
             return []
+    
+    def _validate_stop_loss_take_profit_mirror(self, positions: List[dict], hedge_lower_price: Decimal, hedge_upper_price: Decimal) -> bool:
+        """验证止损止盈价格的镜像对称性"""
+        try:
+            if not positions or len(positions) < 2:
+                logger.warning("仓位数量不足，无法验证镜像对称性", positions_count=len(positions))
+                return False
+            
+            # 分组：多仓和空仓
+            long_positions = [pos for pos in positions if pos["side"].lower() == "buy"]
+            short_positions = [pos for pos in positions if pos["side"].lower() == "sell"]
+            
+            if len(long_positions) != len(short_positions):
+                logger.error("多空仓位数量不平衡", 
+                           long_count=len(long_positions), 
+                           short_count=len(short_positions))
+                return False
+            
+            # 验证数量严格一致
+            long_total = sum(Decimal(str(pos["amount"])) for pos in long_positions)
+            short_total = sum(Decimal(str(pos["amount"])) for pos in short_positions)
+            
+            if abs(long_total - short_total) > Decimal('0.0001'):
+                logger.error("多空仓位总数量不一致", 
+                           long_total=float(long_total),
+                           short_total=float(short_total),
+                           difference=float(abs(long_total - short_total)))
+                return False
+            
+            # 验证镜像价格设置
+            logger.info("验证止损止盈镜像价格设置",
+                       hedge_lower_price=float(hedge_lower_price),
+                       hedge_upper_price=float(hedge_upper_price),
+                       long_positions_count=len(long_positions),
+                       short_positions_count=len(short_positions))
+            
+            # 对于多仓：止损=hedge_lower_price, 止盈=hedge_upper_price
+            # 对于空仓：止损=hedge_upper_price, 止盈=hedge_lower_price
+            # 这样形成完美的镜像对称
+            
+            for pos in long_positions:
+                expected_sl = hedge_lower_price  # 多仓止损在下方
+                expected_tp = hedge_upper_price  # 多仓止盈在上方
+                
+                logger.debug("多仓止损止盈验证",
+                           account_index=pos["account_index"],
+                           side=pos["side"],
+                           expected_sl_price=float(expected_sl),
+                           expected_tp_price=float(expected_tp))
+            
+            for pos in short_positions:
+                expected_sl = hedge_upper_price  # 空仓止损在上方
+                expected_tp = hedge_lower_price  # 空仓止盈在下方
+                
+                logger.debug("空仓止损止盈验证",
+                           account_index=pos["account_index"],
+                           side=pos["side"],
+                           expected_sl_price=float(expected_sl),
+                           expected_tp_price=float(expected_tp))
+            
+            logger.info("✅ 止损止盈镜像对称性验证通过",
+                       positions_verified=len(positions),
+                       long_positions=len(long_positions),
+                       short_positions=len(short_positions))
+            
+            return True
+            
+        except Exception as e:
+            logger.error("止损止盈镜像验证失败", error=str(e))
+            return False

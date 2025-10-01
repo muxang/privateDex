@@ -46,8 +46,8 @@ class HedgeTradingEngine:
         self.trading_pairs: Dict[str, TradingPairConfig] = {}
         self.last_trade_times: Dict[str, datetime] = {}
         
-        # 仓位不一致检测跟踪器
-        self.position_inconsistency_tracker: Dict[str, Dict] = {}
+        # 统一仓位问题检测跟踪器（包括不一致和数量不平衡）
+        self.position_issues_tracker: Dict[str, Dict] = {}
         
         # 止损止盈订单丢失跟踪器
         self.sl_tp_missing_tracker: Dict[str, Dict] = {}
@@ -750,20 +750,20 @@ class HedgeTradingEngine:
                     has_exchange_blocking = True
                     break
             
-            # 2. 检查仓位不一致情况并实施三次确认机制
-            inconsistency_detected = await self._check_position_inconsistency(
-                pair_config, account_position_status
+            # 2. 统一检查仓位问题（包括不一致和数量不平衡）并实施三次确认机制
+            position_issues_detected = await self._check_position_issues(
+                pair_config, account_position_status, exchange_positions_detail
             )
             
-            # 如果检测到仓位不一致，检查是否已经连续三次确认
-            if inconsistency_detected:
-                should_override = await self._handle_position_inconsistency(pair_config, account_position_status)
-                if should_override:
-                    logger.info("🔓 仓位不一致已连续三次确认，自动解除开仓阻塞",
-                               pair_id=pair_config.id)
-                    # 强制清理所有相关仓位和订单，然后允许开仓
-                    await self._force_cleanup_inconsistent_positions(pair_config, account_position_status)
-                    return False  # 允许开仓
+            # 如果检测到仓位问题，检查是否已经连续三次确认
+            if position_issues_detected:
+                should_fix = await self._handle_position_issues(pair_config, account_position_status, exchange_positions_detail)
+                if should_fix:
+                    logger.warning("🔓 仓位问题已连续三次确认，强制重新开仓",
+                                 pair_id=pair_config.id)
+                    # 强制清理所有问题仓位和订单，然后允许重新开仓
+                    await self._force_cleanup_problematic_positions(pair_config, account_position_status, exchange_positions_detail)
+                    return False  # 允许重新开仓
             
             # 3. 检查止损止盈订单丢失情况（针对有仓位但缺乏保护的情况）
             sl_tp_missing_detected = await self._check_sl_tp_orders_missing(
@@ -931,6 +931,282 @@ class HedgeTradingEngine:
                         order_id=getattr(order, 'id', 'unknown'),
                         error=str(e))
             return False  # 出错时保守处理，不认为是止损止盈订单
+    
+    async def _check_position_issues(
+        self, 
+        pair_config: TradingPairConfig, 
+        account_position_status: Dict,
+        exchange_positions: List
+    ) -> bool:
+        """统一检查仓位问题（包括不一致和数量不平衡）"""
+        try:
+            issues_detected = []
+            
+            # 1. 检查仓位不一致（原有逻辑）
+            inconsistency_detected = await self._check_position_inconsistency(
+                pair_config, account_position_status
+            )
+            if inconsistency_detected:
+                issues_detected.append("position_inconsistency")
+            
+            # 2. 检查仓位数量不平衡（新增逻辑）
+            if exchange_positions and len(exchange_positions) >= 2:
+                size_imbalance_detected = self._check_hedge_position_size_balance(
+                    pair_config, exchange_positions
+                )
+                if size_imbalance_detected:
+                    issues_detected.append("size_imbalance")
+            
+            if issues_detected:
+                logger.info("📊 检测到仓位问题",
+                           pair_id=pair_config.id,
+                           issues=issues_detected,
+                           total_issues=len(issues_detected))
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error("统一仓位问题检查失败",
+                        pair_id=pair_config.id,
+                        error=str(e))
+            return False
+
+    def _check_hedge_position_size_balance(
+        self, 
+        pair_config: TradingPairConfig, 
+        exchange_positions: List
+    ) -> bool:
+        """检查对冲仓位数量平衡性"""
+        try:
+            if len(exchange_positions) < 2:
+                return False  # 少于2个仓位无法进行对冲平衡检查
+            
+            # 按账户分组仓位
+            positions_by_account = {}
+            for position in exchange_positions:
+                account_index = getattr(position, 'account_index', None)
+                if not account_index:
+                    continue
+                    
+                if account_index not in positions_by_account:
+                    positions_by_account[account_index] = []
+                positions_by_account[account_index].append(position)
+            
+            if len(positions_by_account) < 2:
+                return False  # 至少需要2个账户的仓位进行平衡检查
+            
+            # 计算每个账户的总仓位数量（绝对值）
+            account_sizes = {}
+            account_details = {}
+            
+            for account_index, positions in positions_by_account.items():
+                total_size = 0
+                position_details = []
+                
+                for pos in positions:
+                    size = abs(float(getattr(pos, 'size', 0)))
+                    side = getattr(pos, 'side', 'unknown')
+                    entry_price = float(getattr(pos, 'entry_price', 0))
+                    
+                    total_size += size
+                    position_details.append({
+                        'side': side,
+                        'size': size,
+                        'entry_price': entry_price
+                    })
+                
+                account_sizes[account_index] = total_size
+                account_details[account_index] = position_details
+            
+            # 检查数量平衡性
+            sizes = list(account_sizes.values())
+            max_size = max(sizes)
+            min_size = min(sizes)
+            
+            # 允许的最大差异比例（5%）
+            max_allowed_diff_percent = 5.0
+            
+            if max_size > 0:
+                diff_percent = ((max_size - min_size) / max_size) * 100
+                
+                logger.info("🔍 对冲仓位数量平衡检查",
+                           pair_id=pair_config.id,
+                           account_sizes=account_sizes,
+                           max_size=max_size,
+                           min_size=min_size,
+                           diff_percent=round(diff_percent, 2),
+                           max_allowed_percent=max_allowed_diff_percent,
+                           is_balanced=diff_percent <= max_allowed_diff_percent)
+                
+                if diff_percent > max_allowed_diff_percent:
+                    logger.warning("⚠️ 检测到对冲仓位数量不平衡",
+                                 pair_id=pair_config.id,
+                                 account_details=account_details,
+                                 size_difference_percent=round(diff_percent, 2),
+                                 threshold_percent=max_allowed_diff_percent)
+                    return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error("检查对冲仓位数量平衡失败", 
+                        pair_id=pair_config.id,
+                        error=str(e))
+            return False
+
+    async def _handle_position_issues(
+        self, 
+        pair_config: TradingPairConfig, 
+        account_position_status: Dict,
+        exchange_positions: List
+    ) -> bool:
+        """处理仓位问题的三次检测机制"""
+        try:
+            pair_id = pair_config.id
+            current_time = datetime.now()
+            
+            # 获取或创建跟踪记录
+            if pair_id not in self.position_issues_tracker:
+                self.position_issues_tracker[pair_id] = {
+                    'count': 0,
+                    'first_detected': current_time,
+                    'last_detected': current_time,
+                    'issues_history': [],
+                    'positions_snapshot': []
+                }
+            
+            tracker = self.position_issues_tracker[pair_id]
+            
+            # 更新检测次数和时间
+            tracker['count'] += 1
+            tracker['last_detected'] = current_time
+            
+            # 记录当前问题和仓位快照
+            current_issues = []
+            if await self._check_position_inconsistency(pair_config, account_position_status):
+                current_issues.append("position_inconsistency")
+            
+            if exchange_positions and self._check_hedge_position_size_balance(pair_config, exchange_positions):
+                current_issues.append("size_imbalance")
+            
+            tracker['issues_history'].append({
+                'time': current_time,
+                'issues': current_issues
+            })
+            
+            # 记录仓位快照
+            positions_snapshot = []
+            for pos in exchange_positions:
+                positions_snapshot.append({
+                    'account_index': getattr(pos, 'account_index', None),
+                    'side': getattr(pos, 'side', 'unknown'),
+                    'size': float(getattr(pos, 'size', 0)),
+                    'entry_price': float(getattr(pos, 'entry_price', 0))
+                })
+            
+            tracker['positions_snapshot'] = positions_snapshot
+            
+            # 检测间隔不能太短（至少30秒）
+            time_since_first = (current_time - tracker['first_detected']).total_seconds()
+            min_detection_interval = 30  # 30秒
+            
+            logger.info("📊 仓位问题检测记录",
+                       pair_id=pair_id,
+                       detection_count=tracker['count'],
+                       time_since_first_seconds=int(time_since_first),
+                       min_interval_seconds=min_detection_interval,
+                       current_issues=current_issues,
+                       positions_snapshot=positions_snapshot)
+            
+            # 需要连续3次检测，且时间间隔合理
+            if tracker['count'] >= 3 and time_since_first >= min_detection_interval:
+                logger.warning("🚨 仓位问题已连续检测到3次，满足强制修复条件",
+                             pair_id=pair_id,
+                             total_detections=tracker['count'],
+                             time_span_seconds=int(time_since_first),
+                             issues_history=tracker['issues_history'][-3:],  # 显示最近3次检测
+                             final_positions=positions_snapshot)
+                
+                # 重置跟踪器
+                del self.position_issues_tracker[pair_id]
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error("处理仓位问题检测失败", 
+                        pair_id=pair_config.id,
+                        error=str(e))
+            return False
+
+    async def _force_cleanup_problematic_positions(
+        self, 
+        pair_config: TradingPairConfig, 
+        account_position_status: Dict,
+        exchange_positions: List
+    ) -> None:
+        """强制清理有问题的仓位"""
+        try:
+            logger.info("🧹 开始强制清理问题仓位",
+                       pair_id=pair_config.id,
+                       positions_to_cleanup=len(exchange_positions))
+            
+            # 获取涉及的账户
+            affected_accounts = set()
+            for pos in exchange_positions:
+                account_index = getattr(pos, 'account_index', None)
+                if account_index:
+                    affected_accounts.add(account_index)
+            
+            # 同时也从account_position_status中获取账户
+            for account_index in account_position_status.keys():
+                affected_accounts.add(account_index)
+            
+            logger.info("🎯 将清理以下账户的仓位",
+                       pair_id=pair_config.id,
+                       affected_accounts=list(affected_accounts))
+            
+            # 使用现有的平衡对冲平仓方法
+            from ..strategies.balanced_hedge_strategy import BalancedHedgeStrategy
+            strategy = BalancedHedgeStrategy(
+                config_manager=self.config_manager,
+                order_manager=self.order_manager,
+                account_manager=self.account_manager,
+                risk_manager=self.risk_manager
+            )
+            
+            # 对每个账户执行平仓
+            for account_index in affected_accounts:
+                try:
+                    # 获取该账户在该市场的仓位
+                    account_positions = await strategy._get_account_positions(
+                        account_index, pair_config.market_index
+                    )
+                    
+                    if account_positions:
+                        logger.info("🔄 执行账户仓位清理",
+                                   account_index=account_index,
+                                   positions_count=len(account_positions))
+                        
+                        # 执行平仓
+                        await strategy._close_all_positions_for_account(
+                            account_index, pair_config.market_index
+                        )
+                        
+                except Exception as e:
+                    logger.error("清理账户仓位失败",
+                               account_index=account_index,
+                               error=str(e))
+            
+            logger.info("✅ 问题仓位清理完成",
+                       pair_id=pair_config.id,
+                       cleaned_accounts=list(affected_accounts))
+            
+        except Exception as e:
+            logger.error("强制清理问题仓位失败",
+                        pair_id=pair_config.id,
+                        error=str(e))
     
     async def _check_position_inconsistency(
         self, 

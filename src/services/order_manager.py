@@ -37,7 +37,7 @@ class OrderManager:
         self._api_call_interval = 2.0  # 最小间隔2秒
         
         # 数据时效性配置
-        self._data_freshness_threshold = 60.0  # WebSocket数据有效期60秒
+        self._data_freshness_threshold = 30.0  # WebSocket数据有效期30秒，避免使用过期数据导致亏损
     
     def _get_all_possible_market_ids(self) -> List[int]:
         """获取所有可能的市场ID，包括配置中的和常见的"""
@@ -1113,74 +1113,39 @@ class OrderManager:
         return valid_pending_orders
     
     async def get_market_data(self, market_index: int) -> Optional[MarketData]:
-        """Get current market data - WebSocket优先，API备选"""
+        """Get current market data - 仅使用WebSocket新鲜数据，避免过期数据导致亏损"""
         try:
-            ws_data = None
-            
-            # 策略1: 优先从WebSocket获取实时数据
-            if self.websocket_manager:
-                ws_data = self.websocket_manager.get_latest_market_data(market_index)
-                logger.debug("🔍 WebSocket数据详细检查", 
-                           market_index=market_index,
-                           has_ws_manager=bool(self.websocket_manager),
-                           ws_data_exists=bool(ws_data),
-                           ws_data_type=type(ws_data).__name__ if ws_data else None)
+            # 仅使用WebSocket实时数据，确保数据新鲜度
+            if not self.websocket_manager:
+                logger.error("WebSocket管理器不可用", market_index=market_index)
+                return None
                 
-                if ws_data and self._is_data_fresh(ws_data):
-                    logger.info("✅ 使用WebSocket实时数据", 
-                               market_index=market_index,
-                               data_age=f"{(datetime.now() - ws_data.timestamp).total_seconds():.1f}s",
-                               price=float(ws_data.price))
-                    return ws_data
-                elif ws_data:
-                    # 即使数据稍微过期，也先记录，可能在API限制时使用
-                    data_age = (datetime.now() - ws_data.timestamp).total_seconds()
-                    logger.info("WebSocket数据稍微过期但可用", 
-                               market_index=market_index,
-                               data_age=f"{data_age:.1f}s",
-                               price=float(ws_data.price))
-                    
-                    # 如果数据不是太旧（小于5分钟），仍然可以使用
-                    if data_age < 300:  # 5分钟内的数据仍可接受
-                        logger.info("✅ 使用稍微过期的WebSocket数据", 
-                                   market_index=market_index,
-                                   data_age=f"{data_age:.1f}s",
-                                   price=float(ws_data.price))
-                        return ws_data
+            ws_data = self.websocket_manager.get_latest_market_data(market_index)
+            logger.debug("🔍 WebSocket数据检查", 
+                       market_index=market_index,
+                       ws_data_exists=bool(ws_data),
+                       ws_data_type=type(ws_data).__name__ if ws_data else None)
             
-            # 策略2: WebSocket数据不可用或太旧时，尝试API（带频率限制）
-            api_key = f"market_data_{market_index}"
-            if self._can_make_api_call(api_key, force_first_call=not bool(ws_data)):
-                logger.debug("尝试API获取市场数据", 
-                           market_index=market_index,
-                           ws_data_available=bool(ws_data))
-                api_data = await self._fetch_market_data_from_api(market_index)
-                if api_data:
-                    logger.debug("✅ API数据获取成功", 
-                               market_index=market_index,
-                               price=float(api_data.price))
-                    return api_data
-            
-            # 策略3: API频率限制时，返回可用的WebSocket数据（即使过期）
-            if ws_data:
+            if ws_data and self._is_data_fresh(ws_data):
                 data_age = (datetime.now() - ws_data.timestamp).total_seconds()
-                logger.info("API频率限制，使用WebSocket备用数据", 
+                logger.info("✅ 使用WebSocket新鲜数据", 
                            market_index=market_index,
                            data_age=f"{data_age:.1f}s",
                            price=float(ws_data.price))
                 return ws_data
-            
-            # 检查WebSocket管理器状态，提供更多调试信息
-            if self.websocket_manager:
-                logger.warning("WebSocket管理器状态",
+            elif ws_data:
+                data_age = (datetime.now() - ws_data.timestamp).total_seconds()
+                logger.warning("⚠️ WebSocket数据过期，拒绝使用", 
                              market_index=market_index,
-                             latest_data_keys=list(self.websocket_manager.latest_market_data.keys()),
-                             cached_data_count=len(self.websocket_manager.latest_market_data))
+                             data_age=f"{data_age:.1f}s",
+                             max_age=f"{self._data_freshness_threshold:.1f}s")
+            else:
+                logger.warning("⚠️ WebSocket数据不可用", market_index=market_index)
             
-            logger.warning("所有数据源都不可用", 
+            # 不再回退到API，确保只使用新鲜数据
+            logger.warning("WebSocket数据不新鲜或不可用，拒绝交易", 
                          market_index=market_index,
-                         ws_data_available=bool(ws_data),
-                         api_rate_limited=not self._can_make_api_call(api_key, force_first_call=False))
+                         ws_data_available=bool(ws_data))
             return None
             
         except Exception as e:
@@ -1251,41 +1216,33 @@ class OrderManager:
             return None
     
     async def get_orderbook(self, market_index: int) -> Optional[OrderBook]:
-        """Get orderbook for a market - WebSocket优先，API备选"""
+        """Get orderbook for a market - 仅使用WebSocket新鲜数据，避免过期数据导致亏损"""
         try:
-            # 策略1: 优先从WebSocket获取实时订单簿
-            if self.websocket_manager:
-                ws_orderbook = self.websocket_manager.get_latest_orderbook(market_index)
-                if ws_orderbook and self._is_data_fresh(ws_orderbook):
-                    logger.debug("使用WebSocket实时订单簿", 
-                               market_index=market_index,
-                               data_age=f"{(datetime.now() - ws_orderbook.timestamp).total_seconds():.1f}s")
-                    return ws_orderbook
-                elif ws_orderbook:
-                    logger.debug("WebSocket订单簿存在但已过期", 
-                               market_index=market_index,
-                               data_age=f"{(datetime.now() - ws_orderbook.timestamp).total_seconds():.1f}s")
-            
-            # 策略2: WebSocket数据不可用时，使用API（带频率限制）
-            api_key = f"orderbook_{market_index}"
-            # 如果没有WebSocket订单簿，允许首次API调用
-            force_first = not bool(ws_orderbook)
-            if self._can_make_api_call(api_key, force_first_call=force_first):
-                logger.debug("WebSocket订单簿不可用，使用API获取", 
+            # 仅使用WebSocket实时订单簿，确保数据新鲜度
+            if not self.websocket_manager:
+                logger.error("WebSocket管理器不可用", market_index=market_index)
+                return None
+                
+            ws_orderbook = self.websocket_manager.get_latest_orderbook(market_index)
+            if ws_orderbook and self._is_data_fresh(ws_orderbook):
+                data_age = (datetime.now() - ws_orderbook.timestamp).total_seconds()
+                logger.debug("✅ 使用WebSocket新鲜订单簿", 
                            market_index=market_index,
-                           reason="首次调用" if force_first else "正常频率")
-                return await self._fetch_orderbook_from_api(market_index)
+                           data_age=f"{data_age:.1f}s")
+                return ws_orderbook
+            elif ws_orderbook:
+                data_age = (datetime.now() - ws_orderbook.timestamp).total_seconds()
+                logger.warning("⚠️ WebSocket订单簿数据过期，拒绝使用", 
+                             market_index=market_index,
+                             data_age=f"{data_age:.1f}s",
+                             max_age=f"{self._data_freshness_threshold:.1f}s")
             else:
-                # 策略3: API频率限制时，返回稍旧的WebSocket数据
-                if self.websocket_manager:
-                    ws_orderbook = self.websocket_manager.get_latest_orderbook(market_index)
-                    if ws_orderbook:
-                        logger.debug("API频率限制，使用过期WebSocket订单簿", 
-                                   market_index=market_index,
-                                   data_age=f"{(datetime.now() - ws_orderbook.timestamp).total_seconds():.1f}s")
-                        return ws_orderbook
+                logger.warning("⚠️ WebSocket订单簿数据不可用", market_index=market_index)
             
-            logger.warning("所有订单簿数据源都不可用", market_index=market_index)
+            # 不再回退到API，确保只使用新鲜数据
+            logger.warning("WebSocket订单簿不新鲜或不可用，拒绝交易", 
+                         market_index=market_index,
+                         ws_orderbook_available=bool(ws_orderbook))
             return None
             
         except Exception as e:
