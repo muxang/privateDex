@@ -1,0 +1,79 @@
+global:
+  api_url: https://mainnet.zklighter.elliot.ai
+  ws_url: wss://mainnet.zklighter.elliot.ai/stream
+  log_level: INFO
+  monitoring_interval: 5
+  enable_auto_trading: true
+  enable_real_time_trigger: true
+  max_concurrent_trades: 10
+  auto_reconnect: true
+  max_reconnect_attempts: 5
+web:
+  port: 3000
+  enable_web_interface: true
+  cors_origins:
+  - '*'
+risk_management:
+  global_max_daily_loss: 5000
+  global_max_position_size: 50000
+  global_max_slippage: 0.02
+  emergency_stop_enabled: true
+  risk_check_interval: 10
+price_triggering:
+  enable_websocket: true
+  fallback_to_polling: true
+  polling_interval: 2
+  price_change_threshold: 0.001
+  default_max_spread_percent: 0.01
+  default_max_volatility_percent: 0.2
+trading_engine:
+  enable_simultaneous_execution: true
+  order_timeout: 30
+  position_check_interval: 5
+  max_retry_attempts: 3
+  cooldown_between_retries: 1
+accounts:
+- index: 165652
+  l1_address: '0xCaAE13268a82873C25250e4429B00a74504cc4D6'
+  private_key: b117e733b9e46776806df0f47cd1c28822fe43aa65c7f1c4f7dc58a189c5811bfe3a316710571301
+  api_key_index: 111
+  is_active: true
+  max_daily_trades: 100
+  risk_limits:
+    max_daily_loss: 1000
+    max_position_size: 10000
+    max_slippage: 0.05
+    min_balance: 0
+- index: 165667
+  l1_address: '0x0B9F983cFAB56a5D95d8DC3b486b7909683169cc'
+  private_key: ae95338b253a7a917dd54f555de4bc74a1df04b0c76cc0eb1df38b231fa15fa81b22c5629e623660
+  api_key_index: 222
+  is_active: true
+  max_daily_trades: 100
+  risk_limits:
+    max_daily_loss: 1000
+    max_position_size: 10000
+    max_slippage: 0.05
+    min_balance: 0
+trading_pairs:
+- id: btc-hedge-1
+  name: BTC 对冲组合 1
+  market_index: 1
+  is_enabled: true
+  stop_take_distance: 0.3
+  max_positions: 3
+  cooldown_minutes: 2
+  account_addresses:
+  - '0xCaAE13268a82873C25250e4429B00a74504cc4D6'
+  - '0x0B9F983cFAB56a5D95d8DC3b486b7909683169cc'
+  hedge_strategy: balanced
+  risk_limits:
+    max_daily_loss: 500
+    max_position_size: 5000
+    max_slippage: 0.005
+    min_balance: 0
+  price_conditions:
+    max_spread_percent: 0.01
+    max_volatility_percent: 0.1
+    min_liquidity_depth: 0.2
+  leverage: 20

@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lighter-hedge-trader"
+version = "1.0.0"
+description = "Advanced hedge trading system for Lighter Protocol"
+authors = [{name = "Lighter Hedge Trading System", email = "dev@example.com"}]
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    "lighter @ git+https://github.com/elliottech/lighter-python.git",
+    "aiohttp>=3.8.0",
+    "pydantic>=2.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+    "websockets>=11.0.0",
+    "python-dotenv>=1.0.0",
+    "structlog>=23.0.0",
+    "colorama>=0.4.6",
+    "click>=8.1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0.0", "pytest-asyncio>=0.21.0", "black", "isort", "mypy"]
+
+[project.scripts]
+hedge-trader = "src.main:cli"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

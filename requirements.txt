@@ -1,0 +1,16 @@
+lighter-sdk @ git+https://github.com/elliottech/lighter-python.git@main
+aiohttp>=3.8.0
+asyncio
+pydantic>=2.0.0
+fastapi>=0.100.0
+uvicorn>=0.20.0
+websockets>=11.0.0
+python-dotenv>=1.0.0
+structlog>=23.0.0
+colorama>=0.4.6
+click>=8.1.0
+redis>=4.5.0
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+PyYAML>=6.0
+pytz>=2023.3
