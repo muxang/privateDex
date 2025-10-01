@@ -1554,3 +1554,40 @@ limit
 2025-10-01 23:29:38 [ERROR] 2025-10-01 23:29:38 [ERROR] 强制清理问题仓位失败 pair_id=btc-hedge-1 error=BalancedHedgeStrategy.__init__() got an unexpected keyword argument 'config_manager'. Did you mean 'order_manager'?
 2025-10-01 23:30:16 [ERROR] 2025-10-01 23:30:16 [ERROR] 强制清理问题仓位失败 pair_id=btc-hedge-1 error=BalancedHedgeStrategy.__init__() got an unexpected keyword argument 'config_manager'. Did you mean 'order_manager'?
 2025-10-01 23:30:32 [ERROR] 2025-10-01 23:30:32 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=3 max_attempts=10
+2025-10-01 23:52:19 [ERROR] 2025-10-01 23:52:19 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-01 23:52:19 [ERROR] 2025-10-01 23:52:19 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-01 23:53:21 [ERROR] 2025-10-01 23:53:21 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=1 max_attempts=10
+2025-10-01 23:54:27 [ERROR] 2025-10-01 23:54:27 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=2 max_attempts=10
+2025-10-01 23:55:32 [ERROR] 2025-10-01 23:55:32 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=3 max_attempts=10
+2025-10-01 23:56:38 [ERROR] 2025-10-01 23:56:38 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=4 max_attempts=10
+2025-10-01 23:57:50 [ERROR] 2025-10-01 23:57:50 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=5 max_attempts=10
+2025-10-01 23:58:55 [ERROR] 2025-10-01 23:58:55 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=6 max_attempts=10
+2025-10-02 00:00:01 [ERROR] 2025-10-02 00:00:01 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=7 max_attempts=10
+2025-10-02 00:01:07 [ERROR] 2025-10-02 00:01:07 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=8 max_attempts=10
+2025-10-02 00:02:13 [ERROR] 2025-10-02 00:02:13 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=9 max_attempts=10
+2025-10-02 00:03:19 [ERROR] 2025-10-02 00:03:19 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=10 max_attempts=10
+2025-10-02 00:03:19 [ERROR] 2025-10-02 00:03:19 [ERROR] 达到最大重连次数，停止重连
+2025-10-02 00:22:54 [ERROR] 2025-10-02 00:22:54 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-02 00:22:54 [ERROR] 2025-10-02 00:22:54 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-02 00:23:49 [ERROR] 2025-10-02 00:23:49 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=1 max_attempts=10
+2025-10-02 00:26:02 [ERROR] 2025-10-02 00:26:02 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=1 max_attempts=10
+2025-10-02 00:27:08 [ERROR] 2025-10-02 00:27:08 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=2 max_attempts=10
+2025-10-02 00:28:14 [ERROR] 2025-10-02 00:28:14 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=3 max_attempts=10
+2025-10-02 00:29:20 [ERROR] 2025-10-02 00:29:20 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=4 max_attempts=10
+2025-10-02 00:30:26 [ERROR] 2025-10-02 00:30:26 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=5 max_attempts=10
+2025-10-02 00:31:32 [ERROR] 2025-10-02 00:31:32 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=6 max_attempts=10
+2025-10-02 00:32:38 [ERROR] 2025-10-02 00:32:38 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=7 max_attempts=10
+2025-10-02 00:33:45 [ERROR] 2025-10-02 00:33:45 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=8 max_attempts=10
+2025-10-02 00:34:50 [ERROR] 2025-10-02 00:34:50 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=9 max_attempts=10

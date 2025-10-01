@@ -1139,6 +1139,20 @@ class OrderManager:
                              market_index=market_index,
                              data_age=f"{data_age:.1f}s",
                              max_age=f"{self._data_freshness_threshold:.1f}s")
+                
+                # 数据过期超过1分钟，强制重新初始化WebSocket
+                if data_age > 60:
+                    logger.warning("数据严重过期，强制重新初始化WebSocket", 
+                                 market_index=market_index,
+                                 data_age=f"{data_age:.1f}s")
+                    try:
+                        await self.websocket_manager.cleanup()
+                        await self.websocket_manager.initialize()
+                        logger.info("WebSocket强制重新初始化完成", market_index=market_index)
+                    except Exception as reinit_error:
+                        logger.error("WebSocket强制重新初始化失败", 
+                                   market_index=market_index, 
+                                   error=str(reinit_error))
             else:
                 logger.warning("⚠️ WebSocket数据不可用", market_index=market_index)
                 

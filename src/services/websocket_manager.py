@@ -43,11 +43,14 @@ class WebSocketManager:
         self.latest_account_data: Dict[int, dict] = {}
         
         self._client_task: Optional[asyncio.Task] = None
+        self._health_check_task: Optional[asyncio.Task] = None
         
         # Connection parameters
         self.reconnect_interval = 5  # seconds
         self.max_reconnect_attempts = 10
         self.current_reconnect_attempts = 0
+        self.health_check_interval = 30  # 每30秒检查一次健康状态
+        self.last_data_received = datetime.now()  # 最后收到数据的时间
     
     def _get_enabled_markets_from_config(self) -> List[int]:
         """从配置中获取所有启用的交易对市场索引"""
@@ -93,8 +96,14 @@ class WebSocketManager:
             # Start the WebSocket client
             self._client_task = asyncio.create_task(self._run_client())
             
+            # Start health check task
+            self._health_check_task = asyncio.create_task(self._health_check_loop())
+            
             # 等待一小段时间让连接建立
             await asyncio.sleep(2)
+            
+            # 初始化数据接收时间
+            self.last_data_received = datetime.now()
             
             # 检查连接状态和订阅确认
             logger.info("WebSocket管理器初始化完成", 
@@ -139,7 +148,11 @@ class WebSocketManager:
                 self.is_connected = True
                 
                 # Run the client (this will block until connection fails)
+                logger.info("WebSocket客户端开始运行", attempt=attempt + 1)
                 await self.ws_client.run_async()
+                
+                # 如果到达这里，说明连接正常结束或异常
+                logger.warning("WebSocket客户端运行结束", attempt=attempt + 1)
                 
             except Exception as e:
                 attempt += 1
@@ -161,10 +174,11 @@ class WebSocketManager:
     def _on_order_book_update(self, market_id, order_book_data) -> None:
         """Handle order book updates from Lighter WsClient - 匹配官方SDK回调签名"""
         try:
-            logger.debug("收到订单簿更新", 
+            logger.debug("📥 收到订单簿更新", 
                        market_id=market_id, 
                        data_type=type(order_book_data).__name__,
-                       data_keys=list(order_book_data.keys()) if isinstance(order_book_data, dict) else "not_dict")
+                       data_keys=list(order_book_data.keys()) if isinstance(order_book_data, dict) else "not_dict",
+                       timestamp=datetime.now().strftime("%H:%M:%S.%f")[:-3])
             
             # 确保market_index是整数类型
             market_index = int(market_id) if isinstance(market_id, str) else market_id
@@ -241,11 +255,15 @@ class WebSocketManager:
                 # Cache latest market data
                 self.latest_market_data[market_index] = market_data
                 
+                # 更新最后收到数据的时间
+                self.last_data_received = datetime.now()
+                
                 logger.debug("✅ WebSocket市场数据已更新", 
                            market_index=market_index,
                            price=float(mid_price),
                            bid=float(bid_price),
-                           ask=float(ask_price))
+                           ask=float(ask_price),
+                           timestamp=datetime.now().strftime("%H:%M:%S.%f")[:-3])
                 
                 # Notify market data callbacks
                 for callback in self.market_data_callbacks:
@@ -701,6 +719,14 @@ class WebSocketManager:
                 except asyncio.CancelledError:
                     pass
             
+            # Cancel health check task
+            if self._health_check_task:
+                self._health_check_task.cancel()
+                try:
+                    await self._health_check_task
+                except asyncio.CancelledError:
+                    pass
+            
             # Close WebSocket client
             if self.ws_client:
                 # The official client should handle its own cleanup
@@ -823,3 +849,65 @@ class WebSocketManager:
             
         except Exception as e:
             logger.error("添加市场订阅失败", market_index=market_index, error=str(e))
+    
+    async def _health_check_loop(self) -> None:
+        """定期检查WebSocket数据健康状态"""
+        try:
+            while True:
+                await asyncio.sleep(self.health_check_interval)
+                
+                if not self.is_connected:
+                    logger.warning("健康检查：WebSocket未连接")
+                    continue
+                
+                current_time = datetime.now()
+                stale_markets = []
+                
+                # 检查整体连接活跃性
+                overall_data_age = (current_time - self.last_data_received).total_seconds()
+                if overall_data_age > 120:  # 超过2分钟没有收到任何数据
+                    logger.warning("健康检查：连接可能已失效，超过2分钟未收到数据", 
+                                 overall_data_age=f"{overall_data_age:.1f}s")
+                    try:
+                        await self._recreate_websocket_client()
+                        logger.info("健康检查：因连接失效重新初始化WebSocket完成")
+                        continue
+                    except Exception as reinit_error:
+                        logger.error("健康检查：连接失效重新初始化失败", 
+                                   error=str(reinit_error))
+                
+                # 检查每个订阅市场的数据新鲜度
+                for market_index in self.subscribed_markets:
+                    market_data = self.latest_market_data.get(market_index)
+                    if market_data:
+                        data_age = (current_time - market_data.timestamp).total_seconds()
+                        if data_age > 90:  # 数据超过90秒认为过期
+                            stale_markets.append({
+                                'market_index': market_index,
+                                'age_seconds': data_age
+                            })
+                    else:
+                        stale_markets.append({
+                            'market_index': market_index,
+                            'age_seconds': float('inf')
+                        })
+                
+                if stale_markets:
+                    logger.warning("健康检查：发现过期数据，重新初始化WebSocket", 
+                                 stale_markets=stale_markets)
+                    try:
+                        await self._recreate_websocket_client()
+                        logger.info("健康检查：WebSocket重新初始化完成")
+                    except Exception as reinit_error:
+                        logger.error("健康检查：WebSocket重新初始化失败", 
+                                   error=str(reinit_error))
+                else:
+                    logger.debug("健康检查：WebSocket数据正常", 
+                               subscribed_markets=list(self.subscribed_markets),
+                               available_markets=list(self.latest_market_data.keys()))
+                
+        except asyncio.CancelledError:
+            logger.debug("健康检查任务被取消")
+            raise
+        except Exception as e:
+            logger.error("健康检查循环异常", error=str(e))
