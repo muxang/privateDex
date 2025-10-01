@@ -227,7 +227,7 @@ class AccountManager:
                 for pos_data in account_data.positions:
                     # 详细调试位置数据字段
                     pos_attrs = [attr for attr in dir(pos_data) if not attr.startswith('_')]
-                    logger.info("🔍 仓位数据字段分析",
+                    logger.debug("🔍 仓位数据字段分析",
                                account_index=config.index,
                                pos_attrs=pos_attrs[:15],  # 限制输出长度
                                pos_type=type(pos_data).__name__)
@@ -237,7 +237,7 @@ class AccountManager:
                     for field_name in ['market_index', 'market_id', 'market', 'marketIndex']:
                         if hasattr(pos_data, field_name):
                             field_value = getattr(pos_data, field_name)
-                            logger.info("🎯 找到市场字段",
+                            logger.debug("🎯 找到市场字段",
                                        field_name=field_name,
                                        field_value=field_value,
                                        field_type=type(field_value).__name__)
@@ -259,7 +259,7 @@ class AccountManager:
                                 'type': type(potential_size).__name__
                             }
                     
-                    logger.info("🔍 所有大小字段检查",
+                    logger.debug("🔍 所有大小字段检查",
                                account_index=config.index,
                                size_fields=size_fields_analysis)
                     
@@ -327,7 +327,7 @@ class AccountManager:
                         updated_at=datetime.now()
                     )
                     
-                    logger.info("📍 解析仓位信息",
+                    logger.debug("📍 解析仓位信息",
                                account_index=config.index,
                                position_id=position.id,
                                market_index=position.market_index,

@@ -3044,7 +3044,7 @@ class BalancedHedgeStrategy:
             
             for account_index in accounts:
                 try:
-                    logger.info("📋 检查账户仓位",
+                    logger.debug("📋 检查账户仓位",
                                account_index=account_index,
                                market_index=pair_config.market_index)
                     

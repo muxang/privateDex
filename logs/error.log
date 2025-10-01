@@ -1358,3 +1358,155 @@ Reason: Too Many Requests
 HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:55:57 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
 HTTP response body: {"code":23000,"message":"Too Many Requests!"}
 
+2025-10-01 21:58:09 [ERROR] 2025-10-01 21:58:09 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=1 max_attempts=10
+2025-10-01 21:59:14 [ERROR] 2025-10-01 21:59:14 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=2 max_attempts=10
+2025-10-01 21:59:21 [ERROR] 2025-10-01 21:59:21 [ERROR] 加载账户失败 account_index=165667 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:21 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:26 [ERROR] 2025-10-01 21:59:26 [ERROR] 加载账户失败 account_index=165652 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:26 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:26 [ERROR] 2025-10-01 21:59:26 [ERROR] 加载账户失败 account_index=165667 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:26 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:26 [ERROR] 2025-10-01 21:59:26 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-01 21:59:26 [ERROR] 2025-10-01 21:59:26 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-01 21:59:27 [ERROR] 2025-10-01 21:59:27 [ERROR] ❌ 调用账户API失败 account_index=165652 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:27 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:27 [ERROR] 2025-10-01 21:59:27 [ERROR] 加载账户失败 account_index=165652 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:27 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:27 [ERROR] 2025-10-01 21:59:27 [ERROR] ❌ 查询账户仓位失败 account_index=165652 market_index=1 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:27 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:27 [ERROR] 2025-10-01 21:59:27 [ERROR] ❌ 调用账户API失败 account_index=165667 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:27 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:27 [ERROR] 2025-10-01 21:59:27 [ERROR] 加载账户失败 account_index=165667 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:27 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:27 [ERROR] 2025-10-01 21:59:27 [ERROR] ❌ 查询账户仓位失败 account_index=165667 market_index=1 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:27 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:47 [ERROR] 2025-10-01 21:59:47 [ERROR] 加载账户失败 account_index=165652 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:47 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:47 [ERROR] 2025-10-01 21:59:47 [ERROR] 加载账户失败 account_index=165667 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:47 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:52 [ERROR] 2025-10-01 21:59:52 [ERROR] 加载账户失败 account_index=165652 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:52 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:52 [ERROR] 2025-10-01 21:59:52 [ERROR] 加载账户失败 account_index=165667 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:52 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:57 [ERROR] 2025-10-01 21:59:57 [ERROR] 加载账户失败 account_index=165652 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:57 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 21:59:57 [ERROR] 2025-10-01 21:59:57 [ERROR] 加载账户失败 account_index=165667 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 13:59:57 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 22:00:08 [ERROR] 2025-10-01 22:00:08 [ERROR] 加载账户失败 account_index=165667 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 14:00:08 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 22:00:18 [ERROR] 2025-10-01 22:00:18 [ERROR] 加载账户失败 account_index=165667 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 14:00:18 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 22:01:01 [ERROR] 2025-10-01 22:01:01 [ERROR] WebSocket连接失败 error=sent 1011 (internal error) keepalive ping timeout; no close frame received attempt=3 max_attempts=10
+2025-10-01 22:02:06 [ERROR] 2025-10-01 22:02:06 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=4 max_attempts=10
+2025-10-01 22:03:12 [ERROR] 2025-10-01 22:03:12 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=5 max_attempts=10
+2025-10-01 22:04:05 [ERROR] 2025-10-01 22:04:05 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-01 22:04:05 [ERROR] 2025-10-01 22:04:05 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-01 22:05:05 [ERROR] 2025-10-01 22:05:05 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=1 max_attempts=10
+2025-10-01 22:06:10 [ERROR] 2025-10-01 22:06:10 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=2 max_attempts=10
+2025-10-01 22:07:16 [ERROR] 2025-10-01 22:07:16 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=3 max_attempts=10
+2025-10-01 22:08:22 [ERROR] 2025-10-01 22:08:22 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=4 max_attempts=10
+2025-10-01 22:09:28 [ERROR] 2025-10-01 22:09:28 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=5 max_attempts=10
+2025-10-01 22:10:33 [ERROR] 2025-10-01 22:10:33 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=6 max_attempts=10
+2025-10-01 22:11:39 [ERROR] 2025-10-01 22:11:39 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=7 max_attempts=10
+2025-10-01 22:12:44 [ERROR] 2025-10-01 22:12:44 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=8 max_attempts=10
+2025-10-01 22:13:50 [ERROR] 2025-10-01 22:13:50 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=9 max_attempts=10
+2025-10-01 22:14:55 [ERROR] 2025-10-01 22:14:55 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=10 max_attempts=10
+2025-10-01 22:14:55 [ERROR] 2025-10-01 22:14:55 [ERROR] 达到最大重连次数，停止重连
+2025-10-01 22:19:57 [ERROR] 2025-10-01 22:19:57 [ERROR] API获取市场数据失败 market_index=1 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 14:19:57 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 22:20:07 [ERROR] 2025-10-01 22:20:07 [ERROR] API获取市场数据失败 market_index=1 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 14:20:07 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 22:20:23 [ERROR] 2025-10-01 22:20:23 [ERROR] API获取市场数据失败 market_index=1 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 14:20:23 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+
+2025-10-01 22:23:08 [ERROR] 2025-10-01 22:23:08 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-01 22:23:09 [ERROR] 2025-10-01 22:23:09 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-01 22:24:04 [ERROR] 2025-10-01 22:24:04 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=1 max_attempts=10
+2025-10-01 22:25:09 [ERROR] 2025-10-01 22:25:09 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=2 max_attempts=10
+2025-10-01 22:26:15 [ERROR] 2025-10-01 22:26:15 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=3 max_attempts=10
+2025-10-01 22:27:21 [ERROR] 2025-10-01 22:27:21 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=4 max_attempts=10
+2025-10-01 22:28:27 [ERROR] 2025-10-01 22:28:27 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=5 max_attempts=10
+2025-10-01 22:29:32 [ERROR] 2025-10-01 22:29:32 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=6 max_attempts=10
+2025-10-01 22:30:38 [ERROR] 2025-10-01 22:30:38 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=7 max_attempts=10
+2025-10-01 22:31:20 [ERROR] 2025-10-01 22:31:20 [ERROR] 加载账户失败 account_index=165652 error=(429)
+Reason: Too Many Requests
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 14:31:20 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '45', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: {"code":23000,"message":"Too Many Requests!"}
+

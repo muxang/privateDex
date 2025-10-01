@@ -1327,7 +1327,7 @@ class HedgeTradingEngine:
                 account_data = self.websocket_manager.latest_account_data.get(account_index)
                 
                 if account_data:
-                    logger.info("从WebSocket获取账户数据成功", 
+                    logger.debug("从WebSocket获取账户数据成功", 
                                account_index=account_index,
                                data_keys=list(account_data.keys()) if isinstance(account_data, dict) else "非字典类型",
                                sample_data=str(account_data)[:500] if account_data else "无数据")

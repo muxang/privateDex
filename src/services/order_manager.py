@@ -1439,7 +1439,7 @@ class OrderManager:
             
             # 检查所有可用的API方法
             api_methods = [method for method in dir(self.order_api) if not method.startswith('_')]
-            logger.info("OrderApi可用方法", methods=api_methods[:10])  # 显示前10个方法
+            logger.debug("OrderApi可用方法", methods=api_methods[:10])  # 显示前10个方法
             
             # 调用API获取活跃订单
             try:
@@ -1482,7 +1482,7 @@ class OrderManager:
                 # 方法2: 使用其他可能的方法
                 if not orders:
                     order_methods = [m for m in api_methods if 'order' in m.lower()]
-                    logger.info("包含order的方法", methods=order_methods)
+                    logger.debug("包含order的方法", methods=order_methods)
                     
                     # 尝试常见的方法名
                     common_methods = ['get_orders', 'list_orders', 'orders']
