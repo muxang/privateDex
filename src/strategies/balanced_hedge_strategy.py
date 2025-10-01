@@ -501,6 +501,9 @@ class BalancedHedgeStrategy:
                 # 创建协调的止损止盈订单
                 logger.info("开始创建协调的对冲止损止盈订单", position_id=position_id)
                 try:
+                    # 等待一小段时间确保所有开仓订单都已处理
+                    await asyncio.sleep(1)
+                    
                     # 刷新仓位数据以确保获得最新状态
                     logger.debug("刷新仓位数据以准备止损止盈", position_id=position_id)
                     refreshed_positions = []
@@ -510,7 +513,7 @@ class BalancedHedgeStrategy:
                             if account_positions:
                                 for pos in account_positions:
                                     if (pos.market_index == pair_config.market_index and 
-                                        pos.size > 0):  # 只添加当前市场的有效仓位
+                                        abs(pos.size) > 0.0001):  # 添加当前市场的有效仓位（多头和空头）
                                         refreshed_positions.append(pos)
                                         logger.info("发现活跃仓位",
                                                   account_index=account_index,
@@ -523,24 +526,62 @@ class BalancedHedgeStrategy:
                                          account_index=account_index,
                                          error=str(e))
                     
+                    # 如果刷新的仓位少于预期的账户数，尝试再次刷新
+                    if len(refreshed_positions) < len(accounts) and len(refreshed_positions) > 0:
+                        logger.info("仓位数量少于账户数，等待并重试",
+                                   refreshed_count=len(refreshed_positions),
+                                   expected_accounts=len(accounts))
+                        await asyncio.sleep(2)  # 再等待2秒
+                        
+                        # 重试获取仓位
+                        retry_positions = []
+                        for account_index in accounts:
+                            try:
+                                account_positions = await self.order_manager.get_positions_for_account(account_index)
+                                if account_positions:
+                                    for pos in account_positions:
+                                        if (pos.market_index == pair_config.market_index and 
+                                            abs(pos.size) > 0.0001):
+                                            retry_positions.append(pos)
+                                            logger.info("重试发现活跃仓位",
+                                                      account_index=account_index,
+                                                      position_id=pos.id,
+                                                      side=pos.side,
+                                                      size=float(pos.size))
+                            except Exception as e:
+                                logger.warning("重试获取账户仓位失败",
+                                             account_index=account_index,
+                                             error=str(e))
+                        
+                        if len(retry_positions) > len(refreshed_positions):
+                            refreshed_positions = retry_positions
+                            logger.info("重试获取到更多仓位", new_count=len(retry_positions))
+                    
                     # 如果刷新成功，使用刷新的数据，否则使用原始数据
                     positions_to_use = refreshed_positions if refreshed_positions else positions
-                    logger.debug("仓位数据选择",
+                    logger.info("仓位数据选择",
                                position_id=position_id,
                                refreshed_count=len(refreshed_positions),
                                original_count=len(positions),
-                               using_refreshed=len(refreshed_positions) > 0)
+                               using_refreshed=len(refreshed_positions) > 0,
+                               expected_accounts=len(accounts))
                     
                     # 准备仓位数据给止损止盈方法
                     positions_for_sl_tp = []
                     for position in positions_to_use:
-                        if position.size > 0:  # 只添加有效仓位
+                        if abs(position.size) > 0.0001:  # 添加有效仓位（多头和空头）
                             positions_for_sl_tp.append({
                                 "account_index": position.account_index,
                                 "side": "buy" if position.side == "long" else "sell",
-                                "amount": position.size,
+                                "amount": abs(position.size),  # 使用绝对值
                                 "entry_price": position.entry_price
                             })
+                            logger.debug("添加仓位到止损止盈列表",
+                                       position_id=position.id,
+                                       account_index=position.account_index,
+                                       side=position.side,
+                                       size=float(position.size),
+                                       abs_size=float(abs(position.size)))
                         else:
                             logger.warning("发现无效仓位，跳过止损止盈设置",
                                          position_id=position.id,
@@ -548,11 +589,17 @@ class BalancedHedgeStrategy:
                                          side=position.side,
                                          size=float(position.size))
                     
-                    logger.debug("准备止损止盈仓位数据",
+                    logger.info("准备止损止盈仓位数据",
                                position_id=position_id,
                                positions_count=len(positions_to_use),
                                valid_positions_count=len(positions_for_sl_tp),
-                               positions_data=positions_for_sl_tp)
+                               positions_data=positions_for_sl_tp,
+                               positions_detail=[{
+                                   "account": p["account_index"],
+                                   "side": p["side"], 
+                                   "amount": float(p["amount"]),
+                                   "entry_price": float(p["entry_price"])
+                               } for p in positions_for_sl_tp])
                     
                     # 检查是否有有效仓位
                     if not positions_for_sl_tp:
@@ -569,6 +616,25 @@ class BalancedHedgeStrategy:
                     )
                     
                     logger.info("✅ 协调止损止盈订单创建完成", position_id=position_id)
+                    
+                    # 验证止损止盈订单是否真正创建
+                    try:
+                        logger.info("🔍 验证止损止盈订单创建状态", position_id=position_id)
+                        for pos in positions_for_sl_tp:
+                            account_index = pos["account_index"]
+                            # 检查该账户的待处理订单
+                            pending_orders = await self.order_manager.get_pending_orders(account_index)
+                            sl_orders = [o for o in pending_orders if getattr(o, 'id', '').startswith('sl_')]
+                            tp_orders = [o for o in pending_orders if getattr(o, 'id', '').startswith('tp_')]
+                            
+                            logger.info("账户止损止盈订单状态",
+                                       account_index=account_index,
+                                       sl_orders_count=len(sl_orders),
+                                       tp_orders_count=len(tp_orders),
+                                       sl_order_ids=[getattr(o, 'id', 'unknown') for o in sl_orders],
+                                       tp_order_ids=[getattr(o, 'id', 'unknown') for o in tp_orders])
+                    except Exception as verify_error:
+                        logger.error("验证止损止盈订单状态失败", error=str(verify_error))
                     
                 except Exception as sl_tp_error:
                     logger.error("创建协调止损止盈订单失败", 
@@ -2642,6 +2708,14 @@ class BalancedHedgeStrategy:
                 
                 # 创建止损订单 - 使用限价单提高精准度
                 try:
+                    logger.info("🛑 创建止损订单",
+                               account_index=account_index,
+                               market_index=market_index,
+                               side=sl_side,
+                               amount=float(amount),
+                               trigger_price=float(sl_trigger_price),
+                               order_type="limit")
+                    
                     sl_order = await self.order_manager.create_stop_loss_order(
                         account_index=account_index,
                         market_index=market_index,
@@ -2681,6 +2755,14 @@ class BalancedHedgeStrategy:
                 
                 # 创建止盈订单 - 使用限价单获得更好价格
                 try:
+                    logger.info("💰 创建止盈订单",
+                               account_index=account_index,
+                               market_index=market_index,
+                               side=tp_side,
+                               amount=float(amount),
+                               trigger_price=float(tp_trigger_price),
+                               order_type="limit")
+                    
                     tp_order = await self.order_manager.create_take_profit_order(
                         account_index=account_index,
                         market_index=market_index,
@@ -3534,9 +3616,15 @@ class BalancedHedgeStrategy:
     def _validate_stop_loss_take_profit_mirror(self, positions: List[dict], hedge_lower_price: Decimal, hedge_upper_price: Decimal) -> bool:
         """验证止损止盈价格的镜像对称性"""
         try:
-            if not positions or len(positions) < 2:
-                logger.warning("仓位数量不足，无法验证镜像对称性", positions_count=len(positions))
+            if not positions:
+                logger.warning("无仓位数据，无法验证镜像对称性", positions_count=0)
                 return False
+            
+            if len(positions) < 2:
+                logger.info("当前只有单个仓位，跳过镜像对称性验证", 
+                           positions_count=len(positions),
+                           note="单仓位情况下直接创建止损止盈")
+                return True  # 允许单个仓位创建止损止盈
             
             # 分组：多仓和空仓
             long_positions = [pos for pos in positions if pos["side"].lower() == "buy"]
@@ -3599,4 +3687,157 @@ class BalancedHedgeStrategy:
             
         except Exception as e:
             logger.error("止损止盈镜像验证失败", error=str(e))
+            return False
+    
+    async def _close_all_positions_for_account(self, account_index: int, market_index: int) -> bool:
+        """关闭指定账户在指定市场的所有仓位"""
+        try:
+            logger.info("🔄 开始清理账户仓位",
+                       account_index=account_index,
+                       market_index=market_index)
+            
+            # 刷新账户数据并获取仓位
+            await self.account_manager.refresh_account(account_index)
+            all_positions = self.account_manager.get_account_positions(account_index)
+            
+            # 过滤出指定市场的仓位
+            positions = []
+            if all_positions:
+                for pos in all_positions:
+                    if hasattr(pos, 'market_index') and pos.market_index == market_index:
+                        positions.append(pos)
+                    elif hasattr(pos, 'market') and pos.market == market_index:
+                        positions.append(pos)
+            
+            logger.info("账户仓位过滤结果",
+                       account_index=account_index,
+                       market_index=market_index,
+                       total_positions=len(all_positions) if all_positions else 0,
+                       target_market_positions=len(positions))
+            
+            if not positions:
+                logger.info("账户在该市场无活跃仓位，无需清理",
+                           account_index=account_index,
+                           market_index=market_index)
+                return True
+            
+            success_count = 0
+            total_positions = len(positions)
+            
+            for position in positions:
+                try:
+                    position_size = float(getattr(position, 'size', 0))
+                    position_side = getattr(position, 'side', 'unknown')
+                    
+                    if abs(position_size) < 0.0001:  # 忽略极小仓位
+                        logger.debug("忽略极小仓位",
+                                   account_index=account_index,
+                                   position_size=position_size)
+                        success_count += 1
+                        continue
+                    
+                    logger.info("📤 执行仓位平仓",
+                               account_index=account_index,
+                               market_index=market_index,
+                               position_side=position_side,
+                               position_size=position_size)
+                    
+                    # 获取平仓方向（与持仓方向相反）
+                    close_side = "sell" if position_side == "long" else "buy"
+                    close_size = abs(position_size)
+                    
+                    logger.info("📋 平仓订单参数",
+                               account_index=account_index,
+                               market_index=market_index,
+                               close_side=close_side,
+                               close_size=close_size,
+                               reduce_only=True)
+                    
+                    # 执行市价平仓
+                    close_result = await self.order_manager.place_market_order(
+                        account_index=account_index,
+                        market_index=market_index,
+                        side=close_side,
+                        size=close_size,
+                        reduce_only=True  # 仅平仓
+                    )
+                    
+                    logger.info("📋 平仓订单结果",
+                               account_index=account_index,
+                               close_result=close_result)
+                    
+                    if close_result and close_result.get('success'):
+                        logger.info("✅ 仓位平仓成功",
+                                   account_index=account_index,
+                                   close_side=close_side,
+                                   close_size=close_size,
+                                   order_id=close_result.get('order_id'))
+                        success_count += 1
+                    else:
+                        logger.error("❌ 仓位平仓失败",
+                                   account_index=account_index,
+                                   close_side=close_side,
+                                   close_size=close_size,
+                                   error=close_result.get('error') if close_result else 'unknown')
+                
+                except Exception as pos_error:
+                    logger.error("处理单个仓位平仓失败",
+                               account_index=account_index,
+                               position_error=str(pos_error))
+            
+            # 等待平仓订单执行
+            await asyncio.sleep(2)
+            
+            # 验证平仓结果
+            logger.info("🔍 验证平仓结果",
+                       account_index=account_index,
+                       market_index=market_index)
+            
+            # 再次刷新账户数据获取最新仓位
+            await self.account_manager.refresh_account(account_index)
+            all_remaining_positions = self.account_manager.get_account_positions(account_index)
+            
+            # 过滤该市场的仓位
+            remaining_positions = []
+            if all_remaining_positions:
+                for pos in all_remaining_positions:
+                    if hasattr(pos, 'market_index') and pos.market_index == market_index:
+                        remaining_positions.append(pos)
+                    elif hasattr(pos, 'market') and pos.market == market_index:
+                        remaining_positions.append(pos)
+            
+            remaining_count = len(remaining_positions)
+            
+            logger.info("📊 平仓验证结果",
+                       account_index=account_index,
+                       market_index=market_index,
+                       total_remaining_positions=len(all_remaining_positions) if all_remaining_positions else 0,
+                       target_market_remaining=remaining_count,
+                       remaining_details=[{
+                           'side': getattr(p, 'side', 'unknown'),
+                           'size': float(getattr(p, 'size', 0)),
+                           'market': getattr(p, 'market_index', getattr(p, 'market', 'unknown'))
+                       } for p in remaining_positions])
+            
+            if remaining_count == 0:
+                logger.info("✅ 账户仓位清理完成",
+                           account_index=account_index,
+                           market_index=market_index,
+                           success_count=success_count,
+                           total_positions=total_positions)
+                return True
+            else:
+                logger.warning("⚠️ 账户仓位清理部分完成",
+                             account_index=account_index,
+                             market_index=market_index,
+                             success_count=success_count,
+                             total_positions=total_positions,
+                             remaining_positions=remaining_count)
+                return success_count > 0
+            
+        except Exception as e:
+            logger.error("清理账户仓位失败",
+                        account_index=account_index,
+                        market_index=market_index,
+                        error=str(e))
             return False

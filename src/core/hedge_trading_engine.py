@@ -759,11 +759,20 @@ class HedgeTradingEngine:
             if position_issues_detected:
                 should_fix = await self._handle_position_issues(pair_config, account_position_status, exchange_positions_detail)
                 if should_fix:
-                    logger.warning("🔓 仓位问题已连续三次确认，强制重新开仓",
-                                 pair_id=pair_config.id)
-                    # 强制清理所有问题仓位和订单，然后允许重新开仓
-                    await self._force_cleanup_problematic_positions(pair_config, account_position_status, exchange_positions_detail)
-                    return False  # 允许重新开仓
+                    logger.warning("🔓 仓位问题已连续三次确认，开始强制清理",
+                                 pair_id=pair_config.id,
+                                 positions_count=len(exchange_positions_detail) if exchange_positions_detail else 0)
+                    
+                    try:
+                        # 强制清理所有问题仓位和订单，然后允许重新开仓
+                        await self._force_cleanup_problematic_positions(pair_config, account_position_status, exchange_positions_detail)
+                        logger.info("✅ 强制清理问题仓位完成", pair_id=pair_config.id)
+                        return False  # 允许重新开仓
+                    except Exception as cleanup_error:
+                        logger.error("❌ 强制清理问题仓位失败", 
+                                   pair_id=pair_config.id,
+                                   error=str(cleanup_error))
+                        return True  # 继续阻塞
             
             # 3. 检查止损止盈订单丢失情况（针对有仓位但缺乏保护的情况）
             sl_tp_missing_detected = await self._check_sl_tp_orders_missing(
@@ -1131,6 +1140,20 @@ class HedgeTradingEngine:
                 # 重置跟踪器
                 del self.position_issues_tracker[pair_id]
                 return True
+            else:
+                remaining_count = max(0, 3 - tracker['count'])
+                remaining_time = max(0, min_detection_interval - time_since_first)
+                
+                logger.info("⏳ 仓位问题检测进度",
+                           pair_id=pair_id,
+                           current_count=tracker['count'],
+                           required_count=3,
+                           remaining_count=remaining_count,
+                           time_elapsed=int(time_since_first),
+                           min_required_time=min_detection_interval,
+                           remaining_time=int(remaining_time),
+                           meet_count_requirement=tracker['count'] >= 3,
+                           meet_time_requirement=time_since_first >= min_detection_interval)
             
             return False
             
@@ -1178,19 +1201,57 @@ class HedgeTradingEngine:
             for account_index in affected_accounts:
                 try:
                     # 获取该账户在该市场的仓位
-                    account_positions = await strategy._get_account_positions(
-                        account_index, pair_config.market_index
-                    )
+                    logger.info("🔍 查询账户仓位", 
+                               account_index=account_index,
+                               market_index=pair_config.market_index)
+                    
+                    # 刷新账户数据并获取仓位
+                    await self.account_manager.refresh_account(account_index)
+                    all_positions = self.account_manager.get_account_positions(account_index)
+                    
+                    # 过滤出指定市场的仓位
+                    account_positions = []
+                    if all_positions:
+                        logger.debug("🔍 检查仓位对象属性",
+                                   account_index=account_index,
+                                   total_positions=len(all_positions),
+                                   position_attributes=[{
+                                       'type': type(p).__name__,
+                                       'attributes': [attr for attr in dir(p) if not attr.startswith('_')],
+                                       'market_index': getattr(p, 'market_index', None),
+                                       'market': getattr(p, 'market', None),
+                                   } for p in all_positions[:2]])  # 只显示前2个
+                        
+                        for pos in all_positions:
+                            if (hasattr(pos, 'market_index') and pos.market_index == pair_config.market_index) or \
+                               (hasattr(pos, 'market') and pos.market == pair_config.market_index):
+                                account_positions.append(pos)
                     
                     if account_positions:
                         logger.info("🔄 执行账户仓位清理",
                                    account_index=account_index,
-                                   positions_count=len(account_positions))
+                                   positions_count=len(account_positions),
+                                   positions_detail=[{
+                                       'side': getattr(p, 'side', getattr(p, 'position_side', 'unknown')),
+                                       'size': float(getattr(p, 'size', getattr(p, 'position_size', 0))),
+                                       'entry_price': float(getattr(p, 'entry_price', getattr(p, 'average_price', 0))),
+                                       'market_index': getattr(p, 'market_index', getattr(p, 'market', 'unknown'))
+                                   } for p in account_positions])
                         
                         # 执行平仓
-                        await strategy._close_all_positions_for_account(
+                        cleanup_result = await strategy._close_all_positions_for_account(
                             account_index, pair_config.market_index
                         )
+                        
+                        if cleanup_result:
+                            logger.info("✅ 账户仓位清理成功", 
+                                       account_index=account_index)
+                        else:
+                            logger.warning("⚠️ 账户仓位清理可能不完整",
+                                         account_index=account_index)
+                    else:
+                        logger.info("📭 账户无仓位需清理", 
+                                   account_index=account_index)
                         
                 except Exception as e:
                     logger.error("清理账户仓位失败",
