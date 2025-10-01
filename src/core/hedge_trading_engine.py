@@ -825,10 +825,10 @@ class HedgeTradingEngine:
                            pair_id=pair_config.id,
                            basis="以交易所实际状态为准")
                 
-                # 清除该交易对的不一致跟踪记录（因为现在状态正常）
-                if pair_config.id in self.position_inconsistency_tracker:
-                    del self.position_inconsistency_tracker[pair_config.id]
-                    logger.info("🧹 清除仓位不一致跟踪记录", pair_id=pair_config.id)
+                # 清除该交易对的问题跟踪记录（因为现在状态正常）
+                if pair_config.id in self.position_issues_tracker:
+                    del self.position_issues_tracker[pair_config.id]
+                    logger.info("🧹 清除仓位问题跟踪记录", pair_id=pair_config.id)
             
             return has_blocking_positions
             
@@ -1170,10 +1170,8 @@ class HedgeTradingEngine:
             # 使用现有的平衡对冲平仓方法
             from ..strategies.balanced_hedge_strategy import BalancedHedgeStrategy
             strategy = BalancedHedgeStrategy(
-                config_manager=self.config_manager,
                 order_manager=self.order_manager,
-                account_manager=self.account_manager,
-                risk_manager=self.risk_manager
+                account_manager=self.account_manager
             )
             
             # 对每个账户执行平仓
@@ -1202,6 +1200,12 @@ class HedgeTradingEngine:
             logger.info("✅ 问题仓位清理完成",
                        pair_id=pair_config.id,
                        cleaned_accounts=list(affected_accounts))
+            
+            # 清除冷却时间，允许立即重新开仓
+            if pair_config.id in self.last_trade_times:
+                del self.last_trade_times[pair_config.id]
+                logger.info("🔥 清除冷却时间限制，允许立即重新开仓", 
+                           pair_id=pair_config.id)
             
         except Exception as e:
             logger.error("强制清理问题仓位失败",
@@ -1268,8 +1272,8 @@ class HedgeTradingEngine:
             status_fingerprint = self._create_position_status_fingerprint(account_position_status)
             
             # 初始化或获取跟踪记录
-            if pair_id not in self.position_inconsistency_tracker:
-                self.position_inconsistency_tracker[pair_id] = {
+            if pair_id not in self.position_issues_tracker:
+                self.position_issues_tracker[pair_id] = {
                     'first_detected': current_time,
                     'last_checked': current_time,
                     'consecutive_count': 1,
@@ -1282,7 +1286,7 @@ class HedgeTradingEngine:
                            status_fingerprint=status_fingerprint)
                 return False
             
-            tracker = self.position_inconsistency_tracker[pair_id]
+            tracker = self.position_issues_tracker[pair_id]
             
             # 检查状态是否与上次相同
             if tracker['last_fingerprint'] == status_fingerprint:
@@ -1403,10 +1407,16 @@ class HedgeTradingEngine:
                                pair_id=pair_config.id,
                                position_id=position.id)
             
-            # 移除不一致跟踪记录
-            if pair_config.id in self.position_inconsistency_tracker:
-                del self.position_inconsistency_tracker[pair_config.id]
-                logger.info("🧹 清除仓位不一致跟踪记录", pair_id=pair_config.id)
+            # 移除问题跟踪记录
+            if pair_config.id in self.position_issues_tracker:
+                del self.position_issues_tracker[pair_config.id]
+                logger.info("🧹 清除仓位问题跟踪记录", pair_id=pair_config.id)
+            
+            # 清除冷却时间，允许立即重新开仓
+            if pair_config.id in self.last_trade_times:
+                del self.last_trade_times[pair_config.id]
+                logger.info("🔥 清除冷却时间限制，允许立即重新开仓", 
+                           pair_id=pair_config.id)
             
         except Exception as e:
             logger.error("强制清理不一致仓位失败", pair_id=pair_config.id, error=str(e))
@@ -2013,6 +2023,12 @@ class HedgeTradingEngine:
             if pair_config.id in self.sl_tp_missing_tracker:
                 del self.sl_tp_missing_tracker[pair_config.id]
                 logger.info("🧹 清除止损止盈丢失跟踪记录", pair_id=pair_config.id)
+            
+            # 清除冷却时间，允许立即重新开仓
+            if pair_config.id in self.last_trade_times:
+                del self.last_trade_times[pair_config.id]
+                logger.info("🔥 清除冷却时间限制，允许立即重新开仓", 
+                           pair_id=pair_config.id)
             
         except Exception as e:
             logger.error("强制清理无保护仓位失败", pair_id=pair_config.id, error=str(e))

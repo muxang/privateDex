@@ -1141,6 +1141,17 @@ class OrderManager:
                              max_age=f"{self._data_freshness_threshold:.1f}s")
             else:
                 logger.warning("⚠️ WebSocket数据不可用", market_index=market_index)
+                
+                # 尝试重新初始化WebSocket连接
+                if self.websocket_manager and not self.websocket_manager.is_connected:
+                    logger.info("检测到WebSocket断开，尝试重新连接", market_index=market_index)
+                    try:
+                        await self.websocket_manager.initialize()
+                        logger.info("WebSocket重新连接成功", market_index=market_index)
+                    except Exception as reconnect_error:
+                        logger.error("WebSocket重新连接失败", 
+                                   market_index=market_index, 
+                                   error=str(reconnect_error))
             
             # 不再回退到API，确保只使用新鲜数据
             logger.warning("WebSocket数据不新鲜或不可用，拒绝交易", 

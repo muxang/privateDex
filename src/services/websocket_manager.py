@@ -93,7 +93,16 @@ class WebSocketManager:
             # Start the WebSocket client
             self._client_task = asyncio.create_task(self._run_client())
             
-            logger.info("WebSocket管理器初始化完成", client_type="lighter.WsClient")
+            # 等待一小段时间让连接建立
+            await asyncio.sleep(2)
+            
+            # 检查连接状态和订阅确认
+            logger.info("WebSocket管理器初始化完成", 
+                       client_type="lighter.WsClient",
+                       is_connected=self.is_connected,
+                       subscribed_markets=markets_to_subscribe,
+                       available_data_markets=list(self.latest_market_data.keys()),
+                       available_orderbook_markets=list(self.latest_orderbooks.keys()))
             
         except Exception as e:
             logger.error("WebSocket管理器初始化失败", error=str(e))
@@ -658,7 +667,21 @@ class WebSocketManager:
                    requested_market_index=market_index,
                    requested_type=type(market_index).__name__,
                    available_keys=list(self.latest_market_data.keys()),
-                   result_found=bool(result))
+                   result_found=bool(result),
+                   is_connected=self.is_connected)
+        
+        # 如果没有数据且连接正常，检查是否需要重新订阅
+        if not result and self.is_connected:
+            logger.warning("WebSocket已连接但无市场数据", 
+                         market_index=market_index,
+                         subscribed_markets=list(self.subscribed_markets),
+                         is_subscribed=market_index in self.subscribed_markets)
+            
+            # 如果该市场未订阅，添加订阅
+            if market_index not in self.subscribed_markets:
+                logger.info("添加缺失的市场订阅", market_index=market_index)
+                asyncio.create_task(self._add_market_subscription(market_index))
+        
         return result
     
     def get_latest_orderbook(self, market_index: int) -> Optional[OrderBook]:
@@ -780,7 +803,23 @@ class WebSocketManager:
                     pass
             
             # 重新初始化
-            await self._initialize_websocket()
+            await self.initialize()
             
         except Exception as e:
             logger.error("重新创建WebSocket客户端失败", error=str(e))
+    
+    async def _add_market_subscription(self, market_index: int) -> None:
+        """添加新的市场订阅"""
+        try:
+            if market_index in self.subscribed_markets:
+                logger.debug("市场已订阅", market_index=market_index)
+                return
+            
+            logger.info("添加新市场订阅", market_index=market_index)
+            self.subscribed_markets.add(market_index)
+            
+            # 重新创建客户端以包含新的订阅
+            await self._recreate_websocket_client()
+            
+        except Exception as e:
+            logger.error("添加市场订阅失败", market_index=market_index, error=str(e))
