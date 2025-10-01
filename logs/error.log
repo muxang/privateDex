@@ -1772,3 +1772,153 @@ limit
 2025-10-02 02:14:10 [ERROR] 2025-10-02 02:14:10 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=1 max_attempts=10
 2025-10-02 02:14:40 [ERROR] 2025-10-02 02:14:40 [ERROR] 清理账户仓位失败 account_index=165667 error=object list can't be used in 'await' expression
 2025-10-02 02:14:40 [ERROR] 2025-10-02 02:14:40 [ERROR] 清理账户仓位失败 account_index=165652 error=object list can't be used in 'await' expression
+2025-10-02 02:23:14 [ERROR] 2025-10-02 02:23:14 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-02 02:23:14 [ERROR] 2025-10-02 02:23:14 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-02 02:24:09 [ERROR] 2025-10-02 02:24:09 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=1 max_attempts=10
+2025-10-02 02:25:16 [ERROR] 2025-10-02 02:25:16 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=2 max_attempts=10
+2025-10-02 02:26:22 [ERROR] 2025-10-02 02:26:22 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=3 max_attempts=10
+2025-10-02 02:27:28 [ERROR] 2025-10-02 02:27:28 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=4 max_attempts=10
+2025-10-02 02:28:33 [ERROR] 2025-10-02 02:28:33 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=5 max_attempts=10
+2025-10-02 02:29:39 [ERROR] 2025-10-02 02:29:39 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=6 max_attempts=10
+2025-10-02 02:30:45 [ERROR] 2025-10-02 02:30:45 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=7 max_attempts=10
+2025-10-02 02:31:51 [ERROR] 2025-10-02 02:31:51 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=8 max_attempts=10
+2025-10-02 02:32:57 [ERROR] 2025-10-02 02:32:57 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=9 max_attempts=10
+2025-10-02 02:34:03 [ERROR] 2025-10-02 02:34:03 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=10 max_attempts=10
+2025-10-02 02:34:03 [ERROR] 2025-10-02 02:34:03 [ERROR] 达到最大重连次数，停止重连
+2025-10-02 02:36:05 [ERROR] 2025-10-02 02:36:05 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=1 max_attempts=10
+2025-10-02 02:37:11 [ERROR] 2025-10-02 02:37:11 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=2 max_attempts=10
+2025-10-02 02:38:17 [ERROR] 2025-10-02 02:38:17 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=3 max_attempts=10
+2025-10-02 02:39:13 [ERROR] 2025-10-02 02:39:13 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error='OrderManager' object has no attribute 'place_market_order'
+2025-10-02 02:39:17 [ERROR] 2025-10-02 02:39:17 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-02 02:39:18 [ERROR] 2025-10-02 02:39:18 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-02 02:39:23 [ERROR] 2025-10-02 02:39:23 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=4 max_attempts=10
+2025-10-02 02:40:19 [ERROR] 2025-10-02 02:40:19 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error='OrderManager' object has no attribute 'place_market_order'
+2025-10-02 02:40:21 [ERROR] 2025-10-02 02:40:21 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-02 02:40:21 [ERROR] 2025-10-02 02:40:21 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-02 02:40:29 [ERROR] 2025-10-02 02:40:29 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=5 max_attempts=10
+2025-10-02 02:41:20 [ERROR] 2025-10-02 02:41:20 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error='OrderManager' object has no attribute 'place_market_order'
+2025-10-02 02:41:22 [ERROR] 2025-10-02 02:41:22 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-02 02:41:23 [ERROR] 2025-10-02 02:41:23 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=1 validation error for OrderApi.account_inactive_orders
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=1000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.11/v/less_than_equal
+2025-10-02 02:41:35 [ERROR] 2025-10-02 02:41:35 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=6 max_attempts=10
+2025-10-02 02:42:41 [ERROR] 2025-10-02 02:42:41 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=7 max_attempts=10
+2025-10-02 02:51:49 [ERROR] 2025-10-02 02:51:49 [ERROR] 当前平台不支持SignerClient account_index=165652
+2025-10-02 02:51:49 [ERROR] 2025-10-02 02:51:49 [ERROR] 当前平台不支持SignerClient account_index=165667
+2025-10-02 02:53:54 [ERROR] 2025-10-02 02:53:54 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 02:54:06 [ERROR] 2025-10-02 02:54:06 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=1 max_attempts=10
+2025-10-02 02:54:37 [ERROR] 2025-10-02 02:54:37 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 02:54:42 [ERROR] 2025-10-02 02:54:42 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 18:54:42 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+
+2025-10-02 02:54:42 [ERROR] 2025-10-02 02:54:42 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 18:54:42 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+
+2025-10-02 02:55:12 [ERROR] 2025-10-02 02:55:12 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=2 max_attempts=10
+2025-10-02 02:55:41 [ERROR] 2025-10-02 02:55:41 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 02:56:18 [ERROR] 2025-10-02 02:56:18 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=3 max_attempts=10
+2025-10-02 02:56:24 [ERROR] 2025-10-02 02:56:24 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 02:57:06 [ERROR] 2025-10-02 02:57:06 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 02:57:24 [ERROR] 2025-10-02 02:57:24 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=4 max_attempts=10
+2025-10-02 02:57:48 [ERROR] 2025-10-02 02:57:48 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 02:58:30 [ERROR] 2025-10-02 02:58:30 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=5 max_attempts=10
+2025-10-02 02:58:30 [ERROR] 2025-10-02 02:58:30 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 02:58:32 [ERROR] 2025-10-02 02:58:32 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 18:58:32 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+
+2025-10-02 02:58:32 [ERROR] 2025-10-02 02:58:32 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 18:58:33 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+
+2025-10-02 02:58:48 [ERROR] 2025-10-02 02:58:48 [ERROR] 多空仓位总数量不一致 long_total=0.00618 short_total=0.00044 difference=0.00574
+2025-10-02 02:58:48 [ERROR] 2025-10-02 02:58:48 [ERROR] 止损止盈镜像对称性验证失败，终止创建 hedge_position_id=hedge_btc-hedge-1_1759345113
+2025-10-02 02:59:27 [ERROR] 2025-10-02 02:59:27 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 02:59:29 [ERROR] 2025-10-02 02:59:29 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 02:59:36 [ERROR] 2025-10-02 02:59:36 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=6 max_attempts=10
+2025-10-02 03:00:10 [ERROR] 2025-10-02 03:00:10 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:00:12 [ERROR] 2025-10-02 03:00:12 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:00:41 [ERROR] 2025-10-02 03:00:41 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=7 max_attempts=10
+2025-10-02 03:00:52 [ERROR] 2025-10-02 03:00:52 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:00:55 [ERROR] 2025-10-02 03:00:55 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:00:57 [ERROR] 2025-10-02 03:00:57 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 19:00:57 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+
+2025-10-02 03:00:57 [ERROR] 2025-10-02 03:00:57 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 19:00:57 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+
+2025-10-02 03:01:13 [ERROR] 2025-10-02 03:01:13 [ERROR] 多空仓位总数量不一致 long_total=0.01327 short_total=0.00753 difference=0.00574
+2025-10-02 03:01:13 [ERROR] 2025-10-02 03:01:13 [ERROR] 止损止盈镜像对称性验证失败，终止创建 hedge_position_id=hedge_btc-hedge-1_1759345258
+2025-10-02 03:01:47 [ERROR] 2025-10-02 03:01:47 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=8 max_attempts=10
+2025-10-02 03:01:51 [ERROR] 2025-10-02 03:01:51 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:01:53 [ERROR] 2025-10-02 03:01:53 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:02:33 [ERROR] 2025-10-02 03:02:33 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:02:36 [ERROR] 2025-10-02 03:02:36 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:02:54 [ERROR] 2025-10-02 03:02:54 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=9 max_attempts=10
+2025-10-02 03:03:16 [ERROR] 2025-10-02 03:03:16 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:03:19 [ERROR] 2025-10-02 03:03:19 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:03:59 [ERROR] 2025-10-02 03:03:59 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:04:00 [ERROR] 2025-10-02 03:04:00 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=10 max_attempts=10
+2025-10-02 03:04:00 [ERROR] 2025-10-02 03:04:00 [ERROR] 达到最大重连次数，停止重连
+2025-10-02 03:04:01 [ERROR] 2025-10-02 03:04:01 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:04:03 [ERROR] 2025-10-02 03:04:03 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 19:04:04 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+
+2025-10-02 03:04:04 [ERROR] 2025-10-02 03:04:04 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 19:04:04 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+
+2025-10-02 03:04:19 [ERROR] 2025-10-02 03:04:19 [ERROR] 多空仓位总数量不一致 long_total=0.00614 short_total=0.0004 difference=0.00574
+2025-10-02 03:04:19 [ERROR] 2025-10-02 03:04:19 [ERROR] 止损止盈镜像对称性验证失败，终止创建 hedge_position_id=hedge_btc-hedge-1_1759345444
+2025-10-02 03:04:57 [ERROR] 2025-10-02 03:04:57 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:05:00 [ERROR] 2025-10-02 03:05:00 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:05:42 [ERROR] 2025-10-02 03:05:42 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:05:44 [ERROR] 2025-10-02 03:05:44 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:06:03 [ERROR] 2025-10-02 03:06:03 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=1 max_attempts=10
+2025-10-02 03:06:24 [ERROR] 2025-10-02 03:06:24 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:06:26 [ERROR] 2025-10-02 03:06:26 [ERROR] 处理单个仓位平仓失败 account_index=165652 position_error=OrderManager.create_market_order() got an unexpected keyword argument 'size'. Did you mean 'side'?
+2025-10-02 03:06:29 [ERROR] 2025-10-02 03:06:29 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 19:06:29 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+
+2025-10-02 03:06:29 [ERROR] 2025-10-02 03:06:29 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Wed, 01 Oct 2025 19:06:29 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+

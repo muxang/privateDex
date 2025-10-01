@@ -284,7 +284,8 @@ class OrderManager:
         market_index: int,
         side: str,  # "buy" or "sell"
         amount: Decimal,
-        max_slippage: Optional[Decimal] = None
+        max_slippage: Optional[Decimal] = None,
+        reduce_only: bool = False
     ) -> Optional[OrderInfo]:
         """Create a market order using Lighter SDK"""
         try:
@@ -356,12 +357,13 @@ class OrderManager:
                 if signer_client is None:
                     raise Exception("SignerClient为None，无法执行订单")
                 
-                logger.debug("准备调用SDK create_order",
+                logger.debug("准备调用SDK create_market_order",
                            market_index=market_index,
                            client_order_index=client_order_index,
                            base_amount=base_amount,
                            price_int=price_int,
-                           is_ask=is_ask)
+                           is_ask=is_ask,
+                           reduce_only=reduce_only)
                 
                 # 使用正确的create_market_order方法！
                 # 根据官方SDK源码，create_market_order会自动设置：
@@ -374,7 +376,7 @@ class OrderManager:
                     base_amount=base_amount,
                     avg_execution_price=price_int,  # 使用avg_execution_price作为最差可接受价格
                     is_ask=is_ask,
-                    reduce_only=False,
+                    reduce_only=reduce_only,  # 使用传入的参数
                     nonce=-1,  # 添加默认nonce参数
                     api_key_index=-1  # 添加默认api_key_index参数
                 )
@@ -964,11 +966,11 @@ class OrderManager:
                 logger.error("OrderApi未初始化")
                 return 0
             
-            # Get all inactive orders from exchange
+            # Get inactive orders from exchange
             # Note: account_inactive_orders doesn't accept market_index parameter
             # We'll filter by market after getting all orders
             inactive_orders_data = await self.order_api.account_inactive_orders(
-                account_index, limit=1000  # Use positional argument and add required limit
+                account_index, limit=100  # API maximum limit is 100
             )
             
             if not inactive_orders_data or not hasattr(inactive_orders_data, 'orders'):
@@ -976,6 +978,8 @@ class OrderManager:
                            account_index=account_index,
                            market_index=market_index)
                 return 0
+            
+            all_inactive_orders = inactive_orders_data.orders
             
             cancelled_count = 0
             signer_client = self.signer_clients.get(account_index)

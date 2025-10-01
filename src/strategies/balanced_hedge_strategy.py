@@ -1492,9 +1492,9 @@ class BalancedHedgeStrategy:
             order = await self.order_manager.create_market_order(
                 account_index=account_index,
                 market_index=market_index,
-                order_type=OrderType.MARKET,
                 side=side,
-                amount=amount
+                amount=amount,
+                reduce_only=True
             )
             
             return order
@@ -2063,7 +2063,8 @@ class BalancedHedgeStrategy:
                 account_index=account_index,
                 market_index=market_index,
                 side=side,
-                amount=amount
+                amount=amount,
+                reduce_only=True
             )
             
             if order:
@@ -3382,7 +3383,8 @@ class BalancedHedgeStrategy:
                 account_index=account_index,
                 market_index=market_index,
                 side=side,
-                amount=amount
+                amount=amount,
+                reduce_only=True
             )
             
             if order:
@@ -3754,11 +3756,11 @@ class BalancedHedgeStrategy:
                                reduce_only=True)
                     
                     # 执行市价平仓
-                    close_result = await self.order_manager.place_market_order(
+                    close_result = await self.order_manager.create_market_order(
                         account_index=account_index,
                         market_index=market_index,
                         side=close_side,
-                        size=close_size,
+                        amount=close_size,
                         reduce_only=True  # 仅平仓
                     )
                     
