@@ -3262,3 +3262,18 @@ HTTP response body: code=20001 message='invalid param: : auth query param and Au
 2025-10-02 20:48:13 [ERROR] 2025-10-02 20:48:13 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=3 max_attempts=10
 2025-10-02 20:49:19 [ERROR] 2025-10-02 20:49:19 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=4 max_attempts=10
 2025-10-02 20:50:25 [ERROR] 2025-10-02 20:50:25 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=5 max_attempts=10
+2025-10-02 20:51:31 [ERROR] 2025-10-02 20:51:31 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=6 max_attempts=10
+2025-10-02 20:52:08 [ERROR] 2025-10-02 20:52:08 [ERROR] 处理单个仓位平仓失败 account_index=165667 position_error='OrderInfo' object has no attribute 'get'
+2025-10-02 20:52:37 [ERROR] 2025-10-02 20:52:37 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=7 max_attempts=10
+2025-10-02 20:52:49 [ERROR] 2025-10-02 20:52:49 [ERROR] 批量取消订单失败 account_index=165652 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Thu, 02 Oct 2025 12:52:49 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+
+2025-10-02 20:52:49 [ERROR] 2025-10-02 20:52:49 [ERROR] 批量取消订单失败 account_index=165667 market_index=1 error=(400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Thu, 02 Oct 2025 12:52:49 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '100', 'Connection': 'keep-alive', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'Content-Type, Origin, X-CSRF-Token, Authorization, AccessToken, Token, Range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, PUT, DELETE', 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin', 'Vary': 'Origin')>
+HTTP response body: code=20001 message='invalid param: : auth query param and Authorization header are both empty' additional_properties={}
+
+2025-10-02 20:53:43 [ERROR] 2025-10-02 20:53:43 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=8 max_attempts=10
+2025-10-02 20:54:49 [ERROR] 2025-10-02 20:54:49 [ERROR] WebSocket连接失败 error=Unhandled message: {'type': 'ping'} attempt=9 max_attempts=10
