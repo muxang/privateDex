@@ -962,15 +962,16 @@ class OrderManager:
     ) -> int:
         """Cancel all inactive orders for an account and optionally specific market"""
         try:
-            if not self.order_api:
-                logger.error("OrderApi未初始化")
+            signer_client = self.signer_clients.get(account_index)
+            if not signer_client:
+                logger.error("SignerClient未初始化", account_index=account_index)
                 return 0
             
-            # Get inactive orders from exchange
+            # Get inactive orders from exchange using authenticated SignerClient
             # Note: account_inactive_orders doesn't accept market_index parameter
             # We'll filter by market after getting all orders
-            inactive_orders_data = await self.order_api.account_inactive_orders(
-                account_index, limit=100  # API maximum limit is 100
+            inactive_orders_data = await signer_client.account_inactive_orders(
+                limit=100  # API maximum limit is 100
             )
             
             if not inactive_orders_data or not hasattr(inactive_orders_data, 'orders'):
@@ -982,9 +983,6 @@ class OrderManager:
             all_inactive_orders = inactive_orders_data.orders
             
             cancelled_count = 0
-            signer_client = self.signer_clients.get(account_index)
-            if not signer_client:
-                raise ValueError(f"账户 {account_index} 的SignerClient未初始化")
             
             # Cancel each inactive order
             for order in inactive_orders_data.orders:
