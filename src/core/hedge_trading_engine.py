@@ -1033,8 +1033,8 @@ class HedgeTradingEngine:
             max_size = max(sizes)
             min_size = min(sizes)
             
-            # 允许的最大差异比例（5%）
-            max_allowed_diff_percent = 5.0
+            # 允许的最大差异比例（1%）
+            max_allowed_diff_percent = 1.0
             
             if max_size > 0:
                 diff_percent = ((max_size - min_size) / max_size) * 100
