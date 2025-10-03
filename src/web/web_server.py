@@ -82,7 +82,7 @@ class WebServer:
                 positions = []
                 
                 # 获取对冲仓位详细信息
-                strategy = getattr(self.trading_engine, 'strategy', None)
+                strategy = getattr(self.trading_engine, 'balanced_hedge_strategy', None)
                 if strategy and hasattr(strategy, 'active_positions'):
                     for position_id, hedge_pos in strategy.active_positions.items():
                         # 获取验证状态信息
@@ -115,13 +115,13 @@ class WebServer:
                         for pos in hedge_pos.positions:
                             # 计算更多详细信息
                             leverage = getattr(pos, 'leverage', 1)
-                            margin_used = getattr(pos, 'margin_used', pos.amount * pos.entry_price if pos.entry_price else 0)
+                            margin_used = getattr(pos, 'margin_used', pos.size * pos.entry_price if pos.entry_price else 0)
                             liquidation_price = getattr(pos, 'liquidation_price', None)
                             margin_ratio = getattr(pos, 'margin_ratio', None)
                             
                             # 计算仓位价值和盈亏比例
-                            position_value = float(pos.amount * pos.current_price if pos.current_price else 0)
-                            entry_value = float(pos.amount * pos.entry_price if pos.entry_price else 0)
+                            position_value = float(pos.size * pos.current_price if pos.current_price else 0)
+                            entry_value = float(pos.size * pos.entry_price if pos.entry_price else 0)
                             pnl_percentage = 0.0
                             if entry_value > 0:
                                 pnl_percentage = (float(pos.unrealized_pnl or 0) / entry_value) * 100
@@ -129,7 +129,7 @@ class WebServer:
                             position_detail = {
                                 "account_index": pos.account_index,
                                 "side": pos.side,
-                                "amount": float(pos.amount),
+                                "amount": float(pos.size),
                                 "entry_price": float(pos.entry_price) if pos.entry_price else None,
                                 "current_price": float(pos.current_price) if pos.current_price else None,
                                 "unrealized_pnl": float(pos.unrealized_pnl) if pos.unrealized_pnl else 0.0,
@@ -354,7 +354,7 @@ class WebServer:
         async def close_position(position_id: str):
             """手动平仓指定仓位"""
             try:
-                strategy = getattr(self.trading_engine, 'strategy', None)
+                strategy = getattr(self.trading_engine, 'balanced_hedge_strategy', None)
                 if not strategy:
                     raise HTTPException(status_code=404, detail="交易策略未找到")
                 
@@ -396,7 +396,7 @@ class WebServer:
         async def close_all_positions():
             """同时平仓所有活跃仓位"""
             try:
-                strategy = getattr(self.trading_engine, 'strategy', None)
+                strategy = getattr(self.trading_engine, 'balanced_hedge_strategy', None)
                 if not strategy:
                     raise HTTPException(status_code=404, detail="交易策略未找到")
                 
@@ -466,6 +466,111 @@ class WebServer:
                 
             except Exception as e:
                 logger.error("批量平仓异常", error=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/positions/force-close-all")
+        async def force_close_all_exchange_positions():
+            """强制平仓所有交易所原始仓位（包括非对冲仓位）"""
+            try:
+                # 检查交易引擎状态
+                logger.info("检查交易引擎状态",
+                           has_trading_engine=bool(self.trading_engine),
+                           engine_attrs=[attr for attr in dir(self.trading_engine) if not attr.startswith('_')] if self.trading_engine else [])
+                
+                strategy = getattr(self.trading_engine, 'balanced_hedge_strategy', None)
+                logger.info("检查策略状态",
+                           has_strategy=bool(strategy),
+                           strategy_type=type(strategy).__name__ if strategy else None)
+                
+                if not strategy:
+                    raise HTTPException(status_code=404, detail="交易策略未找到")
+                
+                # 获取所有账户和交易对
+                accounts = self.config_manager.get_accounts()
+                trading_pairs = self.config_manager.get_trading_pairs()
+                
+                if not accounts or not trading_pairs:
+                    return {
+                        "status": "error",
+                        "message": "未找到账户配置或交易对配置"
+                    }
+                
+                closed_positions = []
+                failed_positions = []
+                
+                # 为每个账户和交易对强制清理仓位
+                for account_config in accounts:
+                    if not account_config.is_active:
+                        continue
+                        
+                    account_index = account_config.index
+                    
+                    for pair_config in trading_pairs:
+                        if not pair_config.is_enabled:
+                            continue
+                            
+                        market_index = pair_config.market_index
+                        
+                        try:
+                            # 检查方法是否存在
+                            if not hasattr(strategy, '_close_all_positions_for_account'):
+                                logger.error("策略缺少_close_all_positions_for_account方法",
+                                           strategy_methods=[m for m in dir(strategy) if not m.startswith('__')])
+                                raise Exception("策略方法不存在")
+                            
+                            # 使用策略的强制清理方法
+                            cleanup_result = await strategy._close_all_positions_for_account(
+                                account_index, 
+                                market_index
+                            )
+                            
+                            if cleanup_result:
+                                closed_positions.append({
+                                    "account_index": account_index,
+                                    "market_index": market_index,
+                                    "pair_id": pair_config.id,
+                                    "success": True
+                                })
+                                logger.info("账户仓位强制清理成功",
+                                           account_index=account_index,
+                                           market_index=market_index)
+                            else:
+                                failed_positions.append({
+                                    "account_index": account_index,
+                                    "market_index": market_index,
+                                    "pair_id": pair_config.id,
+                                    "error": "清理返回失败"
+                                })
+                                
+                        except Exception as pos_error:
+                            failed_positions.append({
+                                "account_index": account_index,
+                                "market_index": market_index,
+                                "pair_id": pair_config.pair_id,
+                                "error": str(pos_error)
+                            })
+                            logger.error("账户仓位强制清理失败",
+                                       account_index=account_index,
+                                       market_index=market_index,
+                                       error=str(pos_error))
+                
+                total_processed = len(closed_positions) + len(failed_positions)
+                
+                logger.info("强制平仓所有交易所仓位完成", 
+                           closed_count=len(closed_positions),
+                           failed_count=len(failed_positions),
+                           total_processed=total_processed)
+                
+                return {
+                    "status": "completed",
+                    "message": f"强制平仓完成: 成功 {len(closed_positions)} 个账户，失败 {len(failed_positions)} 个账户",
+                    "closed_positions": closed_positions,
+                    "failed_positions": failed_positions,
+                    "total_processed": total_processed
+                }
+                
+            except Exception as e:
+                logger.error("强制平仓所有交易所仓位异常", error=str(e))
                 raise HTTPException(status_code=500, detail=str(e))
         
         @self.app.get("/api/market-data")
@@ -583,6 +688,10 @@ class WebServer:
                     <button onclick="startEngine()">▶️ 启动引擎</button>
                     <button onclick="stopEngine()">⏹️ 停止引擎</button>
                     <button onclick="refreshData()">🔄 刷新数据</button>
+                    <br><br>
+                    <h4>🛑 平仓操作</h4>
+                    <button onclick="closeAllPositions()" style="background: #ffc107; color: #000;">📊 平仓对冲仓位</button>
+                    <button onclick="forceCloseAllPositions()" style="background: #dc3545; margin-left: 10px;">⚠️ 强制平仓所有仓位</button>
                 </div>
             </div>
             
@@ -819,6 +928,52 @@ class WebServer:
                         refreshData();
                     } catch (error) {
                         alert('停止失败: ' + error.message);
+                    }
+                }
+                
+                async function closeAllPositions() {
+                    if (!confirm('确定要平仓所有对冲仓位吗？此操作不可撤销！')) {
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('/api/positions/close-all', { method: 'POST' });
+                        const result = await response.json();
+                        
+                        if (result.status === 'completed') {
+                            alert(`平仓完成！\\n成功: ${result.closed_positions.length} 个\\n失败: ${result.failed_positions.length} 个`);
+                        } else {
+                            alert(result.message || '平仓操作完成');
+                        }
+                        
+                        refreshData();
+                    } catch (error) {
+                        alert('平仓失败: ' + error.message);
+                    }
+                }
+                
+                async function forceCloseAllPositions() {
+                    if (!confirm('⚠️ 警告：确定要强制平仓所有交易所仓位吗？\\n这将清理所有账户的所有仓位，包括非对冲仓位！\\n此操作不可撤销！')) {
+                        return;
+                    }
+                    
+                    if (!confirm('⚠️ 最后确认：您真的要执行强制平仓所有仓位吗？')) {
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('/api/positions/force-close-all', { method: 'POST' });
+                        const result = await response.json();
+                        
+                        if (result.status === 'completed') {
+                            alert(`强制平仓完成！\\n成功: ${result.closed_positions.length} 个账户\\n失败: ${result.failed_positions.length} 个账户`);
+                        } else {
+                            alert(result.message || '强制平仓操作完成');
+                        }
+                        
+                        refreshData();
+                    } catch (error) {
+                        alert('强制平仓失败: ' + error.message);
                     }
                 }
                 

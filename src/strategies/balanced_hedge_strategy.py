@@ -513,7 +513,7 @@ class BalancedHedgeStrategy:
                             if account_positions:
                                 for pos in account_positions:
                                     if (pos.market_index == pair_config.market_index and 
-                                        abs(pos.size) > 0.0001):  # 添加当前市场的有效仓位（多头和空头）
+                                        abs(pos.size) > 0.000001):  # 添加当前市场的有效仓位（多头和空头）
                                         refreshed_positions.append(pos)
                                         logger.info("发现活跃仓位",
                                                   account_index=account_index,
@@ -541,7 +541,7 @@ class BalancedHedgeStrategy:
                                 if account_positions:
                                     for pos in account_positions:
                                         if (pos.market_index == pair_config.market_index and 
-                                            abs(pos.size) > 0.0001):
+                                            abs(pos.size) > 0.000001):
                                             retry_positions.append(pos)
                                             logger.info("重试发现活跃仓位",
                                                       account_index=account_index,
@@ -569,7 +569,7 @@ class BalancedHedgeStrategy:
                     # 准备仓位数据给止损止盈方法
                     positions_for_sl_tp = []
                     for position in positions_to_use:
-                        if abs(position.size) > 0.0001:  # 添加有效仓位（多头和空头）
+                        if abs(position.size) > 0.000001:  # 添加有效仓位（多头和空头）
                             positions_for_sl_tp.append({
                                 "account_index": position.account_index,
                                 "side": "buy" if position.side == "long" else "sell",
@@ -2723,7 +2723,7 @@ class BalancedHedgeStrategy:
                         side=sl_side,
                         amount=amount,
                         trigger_price=sl_trigger_price,
-                        order_type="limit"  # 改为限价单
+                        order_type="limit"  # 使用限价单
                     )
                     
                     # 添加OCO关联标记到订单元数据
@@ -3642,7 +3642,7 @@ class BalancedHedgeStrategy:
             long_total = sum(Decimal(str(pos["amount"])) for pos in long_positions)
             short_total = sum(Decimal(str(pos["amount"])) for pos in short_positions)
             
-            if abs(long_total - short_total) > Decimal('0.0001'):
+            if abs(long_total - short_total) > Decimal('0.00001'):
                 logger.error("多空仓位总数量不一致", 
                            long_total=float(long_total),
                            short_total=float(short_total),
@@ -3731,12 +3731,19 @@ class BalancedHedgeStrategy:
                     position_size = float(getattr(position, 'size', 0))
                     position_side = getattr(position, 'side', 'unknown')
                     
-                    if abs(position_size) < 0.0001:  # 忽略极小仓位
-                        logger.debug("忽略极小仓位",
+                    if abs(position_size) < 0.000001:  # 忽略极极小仓位 (< 1e-6)
+                        logger.debug("忽略极极小仓位",
                                    account_index=account_index,
                                    position_size=position_size)
                         success_count += 1
                         continue
+                    
+                    # 对于极小仓位（1e-6 到 1e-3之间），添加特殊处理
+                    if abs(position_size) < 0.000001:
+                        logger.warning("检测到极小仓位，可能无法平仓",
+                                     account_index=account_index,
+                                     position_size=position_size,
+                                     note="交易所可能有最小交易数量限制")
                     
                     logger.info("📤 执行仓位平仓",
                                account_index=account_index,
@@ -3768,19 +3775,29 @@ class BalancedHedgeStrategy:
                                account_index=account_index,
                                close_result=close_result)
                     
-                    if close_result and close_result.get('success'):
+                    if close_result and close_result.status == OrderStatus.PENDING:
                         logger.info("✅ 仓位平仓成功",
                                    account_index=account_index,
                                    close_side=close_side,
                                    close_size=close_size,
-                                   order_id=close_result.get('order_id'))
+                                   order_id=close_result.id)
                         success_count += 1
                     else:
-                        logger.error("❌ 仓位平仓失败",
-                                   account_index=account_index,
-                                   close_side=close_side,
-                                   close_size=close_size,
-                                   error=close_result.get('error') if close_result else 'unknown')
+                        error_msg = 'Order creation failed' if not close_result else f'Order status: {close_result.status}'
+                        # 检查是否是因为数量太小导致的失败
+                        if abs(position_size) < 0.000001 and ('minimum' in str(error_msg).lower() or 'size' in str(error_msg).lower()):
+                            logger.warning("⚠️ 极小仓位无法平仓（可能低于最小交易数量）",
+                                         account_index=account_index,
+                                         position_size=position_size,
+                                         error=error_msg,
+                                         note="此类极小仓位通常可忽略")
+                            success_count += 1  # 对于极小仓位，视为成功处理
+                        else:
+                            logger.error("❌ 仓位平仓失败",
+                                       account_index=account_index,
+                                       close_side=close_side,
+                                       close_size=close_size,
+                                       error=error_msg)
                 
                 except Exception as pos_error:
                     logger.error("处理单个仓位平仓失败",

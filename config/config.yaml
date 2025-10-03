@@ -56,9 +56,9 @@ accounts:
     max_slippage: 0.05
     min_balance: 0
 trading_pairs:
-- id: btc-hedge-1
-  name: BTC 对冲组合 1
-  market_index: 1
+- id: sol-hedge-1
+  name: SOL 对冲组合 1
+  market_index: 2
   is_enabled: true
   stop_take_distance: 0.3
   max_positions: 3
@@ -76,4 +76,4 @@ trading_pairs:
     max_spread_percent: 0.01
     max_volatility_percent: 0.1
     min_liquidity_depth: 0.2
-  leverage: 20
+  leverage: 10

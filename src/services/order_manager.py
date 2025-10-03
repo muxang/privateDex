@@ -346,9 +346,18 @@ class OrderManager:
                 client_order_index = self._generate_client_order_index()
                 
                 # 根据市场配置进行正确转换
-                # BTC市场: size_decimals=5, price_decimals=1
-                base_amount = int(amount * 100000)  # amount × 10^5
-                price_int = int(max_price * 10)     # price × 10^1
+                price_decimals, size_decimals, price_multiplier, size_multiplier = await self._get_market_precision(market_index)
+                base_amount = int(amount * size_multiplier)
+                price_int = int(max_price * price_multiplier)
+                
+                logger.debug("市场精度转换",
+                           market_index=market_index,
+                           price_decimals=price_decimals,
+                           size_decimals=size_decimals,
+                           original_amount=float(amount),
+                           converted_amount=base_amount,
+                           original_price=float(max_price),
+                           converted_price=price_int)
                 
                 # Submit order through signer client - 使用市价单
                 import lighter
@@ -530,12 +539,18 @@ class OrderManager:
             client_order_index = self._generate_client_order_index()
             
             # 根据市场配置进行正确转换
-            # BTC市场: size_decimals=5, price_decimals=1
-            # base_amount转换: amount × 10^5 (支持5位小数)
-            base_amount = int(amount * 100000)
+            price_decimals, size_decimals, price_multiplier, size_multiplier = await self._get_market_precision(market_index)
+            base_amount = int(amount * size_multiplier)
+            price_int = int(price * price_multiplier)
             
-            # price转换: price × 10^1 (支持1位小数)
-            price_int = int(price * 10)
+            logger.debug("限价单市场精度转换",
+                       market_index=market_index,
+                       price_decimals=price_decimals,
+                       size_decimals=size_decimals,
+                       original_amount=float(amount),
+                       converted_amount=base_amount,
+                       original_price=float(price),
+                       converted_price=price_int)
             
             try:
                 # 通过SignerClient提交订单 - 使用正确的参数格式
@@ -705,6 +720,127 @@ class OrderManager:
         """生成客户端订单索引"""
         return int(datetime.now().timestamp() * 1000) % 1000000
     
+    async def _get_market_precision(self, market_index: int) -> tuple:
+        """
+        动态获取市场精度配置
+        返回 (price_decimals, size_decimals, price_multiplier, size_multiplier)
+        """
+        try:
+            # 首先尝试从缓存获取
+            if not hasattr(self, '_market_precision_cache'):
+                self._market_precision_cache = {}
+            
+            if market_index in self._market_precision_cache:
+                return self._market_precision_cache[market_index]
+            
+            # 尝试从API获取市场信息
+            if self.order_api:
+                try:
+                    # 通过orderbook API获取市场信息，这个API通常包含精度信息
+                    orderbook_data = await self.order_api.order_book_details(market_id=market_index)
+                    
+                    if orderbook_data and hasattr(orderbook_data, 'market'):
+                        market_info = orderbook_data.market
+                        price_decimals = getattr(market_info, 'price_decimals', 1)
+                        size_decimals = getattr(market_info, 'size_decimals', 5)
+                        
+                        # 计算乘数
+                        price_multiplier = 10 ** price_decimals
+                        size_multiplier = 10 ** size_decimals
+                        
+                        precision = (price_decimals, size_decimals, price_multiplier, size_multiplier)
+                        
+                        # 缓存结果
+                        self._market_precision_cache[market_index] = precision
+                        
+                        logger.info("从API获取市场精度配置",
+                                   market_index=market_index,
+                                   price_decimals=price_decimals,
+                                   size_decimals=size_decimals)
+                        
+                        return precision
+                        
+                except Exception as api_error:
+                    logger.warning("从API获取市场精度失败",
+                                 market_index=market_index,
+                                 error=str(api_error))
+            
+            # 如果API失败，优先使用market_index直接映射
+            precision = self._get_precision_by_market_index(market_index)
+            if precision != (2, 4, 100, 10000):  # 不是默认值，说明找到了匹配
+                self._market_precision_cache[market_index] = precision
+                logger.info("使用market_index直接映射精度",
+                           market_index=market_index,
+                           precision=precision)
+                return precision
+            
+            # 如果market_index映射也没有，尝试从配置中推断
+            trading_pairs = self.config_manager.get_trading_pairs()
+            for pair in trading_pairs:
+                if pair.market_index == market_index:
+                    # 根据交易对名称推断精度
+                    precision = self._infer_precision_from_pair_name(pair.name, pair.id)
+                    self._market_precision_cache[market_index] = precision
+                    
+                    logger.info("从配置推断市场精度",
+                               market_index=market_index,
+                               pair_name=pair.name,
+                               precision=precision)
+                    
+                    return precision
+            
+            # 最后使用默认配置
+            logger.warning("无法获取市场精度，使用默认BTC配置", market_index=market_index)
+            default_precision = (1, 5, 10, 100000)  # BTC默认配置
+            self._market_precision_cache[market_index] = default_precision
+            return default_precision
+            
+        except Exception as e:
+            logger.error("获取市场精度配置失败",
+                        market_index=market_index,
+                        error=str(e))
+            return (1, 5, 10, 100000)  # 默认BTC配置
+    
+    def _get_precision_by_market_index(self, market_index: int) -> tuple:
+        """根据market_index直接获取真实精度配置（从Lighter Protocol API确认）"""
+        precision_map = {
+            1: (1, 5, 10, 100000),      # BTC
+            2: (3, 3, 1000, 1000),      # SOL - 真实精度配置
+            3: (6, 0, 1000000, 1),      # DOGE
+            4: (6, 0, 1000000, 1),      # 1000PEPE  
+            5: (5, 1, 100000, 10),      # WIF
+        }
+        
+        return precision_map.get(market_index, (2, 4, 100, 10000))  # 默认配置
+    
+    def _infer_precision_from_pair_name(self, pair_name: str, pair_id: str) -> tuple:
+        """根据交易对名称推断精度配置（已更新为真实API精度）"""
+        name_lower = pair_name.lower()
+        id_lower = pair_id.lower()
+        
+        if 'btc' in name_lower or 'btc' in id_lower or 'bitcoin' in name_lower:
+            return (1, 5, 10, 100000)  # BTC - 真实精度
+        elif 'eth' in name_lower or 'eth' in id_lower or 'ethereum' in name_lower:
+            return (2, 4, 100, 10000)  # ETH - 预估精度（目前无ETH市场）
+        elif 'sol' in name_lower or 'sol' in id_lower or 'solana' in name_lower:
+            return (3, 3, 1000, 1000)  # SOL - 真实精度（修复）
+        elif 'doge' in name_lower or 'doge' in id_lower:
+            return (6, 0, 1000000, 1)  # DOGE - 真实精度
+        elif 'pepe' in name_lower or 'pepe' in id_lower:
+            return (6, 0, 1000000, 1)  # PEPE - 真实精度
+        elif 'wif' in name_lower or 'wif' in id_lower:
+            return (5, 1, 100000, 10)  # WIF - 真实精度
+        elif 'usdc' in name_lower or 'usdc' in id_lower:
+            return (4, 2, 10000, 100)  # USDC - 预估精度
+        elif 'usdt' in name_lower or 'usdt' in id_lower:
+            return (4, 2, 10000, 100)  # USDT - 预估精度
+        else:
+            # 默认使用中等精度配置
+            logger.warning("无法识别交易对类型，使用默认精度",
+                         pair_name=pair_name,
+                         pair_id=pair_id)
+            return (2, 4, 100, 10000)  # 类似ETH的配置
+    
     async def get_order_status(self, order_id: str) -> Optional[OrderStatus]:
         """Get order status"""
         order = self.orders.get(order_id)
@@ -735,8 +871,16 @@ class OrderManager:
             # 转换参数
             is_ask = side.lower() == "sell"
             client_order_index = self._generate_client_order_index()
-            base_amount = int(amount * 100000)
-            trigger_price_int = int(trigger_price * 10)
+            
+            # 动态获取市场精度
+            price_decimals, size_decimals, price_multiplier, size_multiplier = await self._get_market_precision(market_index)
+            base_amount = int(amount * size_multiplier)
+            trigger_price_int = int(trigger_price * price_multiplier)
+            
+            logger.debug("止损单市场精度转换",
+                       market_index=market_index,
+                       price_decimals=price_decimals,
+                       size_decimals=size_decimals)
             
             try:
                 import lighter
@@ -834,8 +978,16 @@ class OrderManager:
             # 转换参数
             is_ask = side.lower() == "sell"
             client_order_index = self._generate_client_order_index()
-            base_amount = int(amount * 100000)
-            trigger_price_int = int(trigger_price * 10)
+            
+            # 动态获取市场精度
+            price_decimals, size_decimals, price_multiplier, size_multiplier = await self._get_market_precision(market_index)
+            base_amount = int(amount * size_multiplier)
+            trigger_price_int = int(trigger_price * price_multiplier)
+            
+            logger.debug("止盈单市场精度转换",
+                       market_index=market_index,
+                       price_decimals=price_decimals,
+                       size_decimals=size_decimals)
             
             try:
                 import lighter
@@ -1130,10 +1282,10 @@ class OrderManager:
             
             if ws_data and self._is_data_fresh(ws_data):
                 data_age = (datetime.now() - ws_data.timestamp).total_seconds()
-                logger.info("✅ 使用WebSocket新鲜数据", 
-                           market_index=market_index,
-                           data_age=f"{data_age:.1f}s",
-                           price=float(ws_data.price))
+                logger.debug("✅ 使用WebSocket新鲜数据", 
+                            market_index=market_index,
+                            data_age=f"{data_age:.1f}s",
+                            price=float(ws_data.price))
                 return ws_data
             elif ws_data:
                 data_age = (datetime.now() - ws_data.timestamp).total_seconds()
